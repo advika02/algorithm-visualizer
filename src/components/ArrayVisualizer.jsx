@@ -1,11 +1,15 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { bubbleSort } from "../algorithms/bubbleSort";
 import { mergeSort } from "../algorithms/mergeSort";
 import { quickSort } from "../algorithms/quickSort";
+import { ANIMATION_TYPES } from "../algorithms/animationTypes";
 
 function ArrayVisualizer() {
   const [array, setArray] = useState([]);
-  const [speed, setSpeed] = useState(2500);
+  const [arraySize, setArraySize] = useState(30);
+  const [speed, setSpeed] = useState(1200); // Animation delay in milliseconds
+  const speedRef = useRef(1200);
+  const isPausedRef = useRef(false);
   const [selectedAlgorithm, setSelectedAlgorithm] = useState(null);
   const [currentStep, setCurrentStep] = useState("");
   const [isRunning, setIsRunning] = useState(false);
@@ -14,6 +18,7 @@ function ArrayVisualizer() {
   const [currentAnimationIndex, setCurrentAnimationIndex] = useState(0);
   const [timeoutIds, setTimeoutIds] = useState([]);
   const [stats, setStats] = useState({ comparisons: 0, swaps: 0, iteration: 0 });
+  const [highlightedRange, setHighlightedRange] = useState({ start: -1, end: -1 });
 
   const algorithmInfo = {
     bubble: {
@@ -42,7 +47,7 @@ function ArrayVisualizer() {
 
   function generateArray() {
     const newArray = [];
-    for (let i = 0; i < 30; i++) {
+    for (let i = 0; i < arraySize; i++) {
       newArray.push(Math.floor(Math.random() * 350) + 20);
     }
     setArray(newArray);
@@ -52,12 +57,14 @@ function ArrayVisualizer() {
     setAnimations([]);
     setCurrentAnimationIndex(0);
     setStats({ comparisons: 0, swaps: 0, iteration: 0 });
+    setHighlightedRange({ start: -1, end: -1 });
     clearAllTimeouts();
-    
+
     setTimeout(() => {
       const bars = document.getElementsByClassName("array-bar");
       for (let i = 0; i < bars.length; i++) {
         bars[i].style.backgroundColor = "turquoise";
+        bars[i].style.transform = "scaleY(1)";
       }
     }, 0);
   }
@@ -74,129 +81,192 @@ function ArrayVisualizer() {
     setCurrentAnimationIndex(0);
     setCurrentStep("");
     setStats({ comparisons: 0, swaps: 0, iteration: 0 });
+    setHighlightedRange({ start: -1, end: -1 });
     const bars = document.getElementsByClassName("array-bar");
     for (let i = 0; i < bars.length; i++) {
       bars[i].style.backgroundColor = "turquoise";
+      bars[i].style.transform = "scaleY(1)";
     }
   }
 
   function executeAnimation(animation, bars) {
-    if (animation.type === "comparison") {
+    if (animation.type === ANIMATION_TYPES.COMPARE || animation.type === "comparison") {
       animation.indices.forEach(idx => {
         bars[idx].style.backgroundColor = "red";
+        bars[idx].style.transform = "scaleY(1.05)";
       });
-      setCurrentStep(`Comparing elements at index ${animation.indices[0]} and ${animation.indices[1]}`);
+      setCurrentStep(`🔍 Comparing elements at index ${animation.indices[0]} (${array[animation.indices[0]]}) and ${animation.indices[1]} (${array[animation.indices[1]]})`);
       setStats(prev => ({ ...prev, comparisons: prev.comparisons + 1, iteration: prev.iteration + 1 }));
-    } else if (animation.type === "swap") {
-      animation.indices.forEach((idx, i) => {
-        bars[idx].style.backgroundColor = "yellow";
-        bars[idx].style.height = `${animation.heights[i]}px`;
-      });
+
+      setTimeout(() => {
+        animation.indices.forEach(idx => {
+          if (bars[idx] && bars[idx].style.backgroundColor !== "green" && bars[idx].style.backgroundColor !== "purple") {
+            const isInRange = highlightedRange.start !== -1 &&
+                            idx >= highlightedRange.start &&
+                            idx <= highlightedRange.end;
+            bars[idx].style.backgroundColor = isInRange ? "rgba(135, 206, 250, 0.6)" : "turquoise";
+            bars[idx].style.transform = "scaleY(1)";
+          }
+        });
+      }, speed * 0.4);
+    } else if (animation.type === ANIMATION_TYPES.SWAP || animation.type === "swap") {
       if (animation.indices.length > 1) {
-        setCurrentStep(`Swapping elements at index ${animation.indices[0]} and ${animation.indices[1]}`);
+        setArray(prevArray => {
+          const newArray = [...prevArray];
+          newArray[animation.indices[0]] = animation.heights[0];
+          newArray[animation.indices[1]] = animation.heights[1];
+          return newArray;
+        });
+        setCurrentStep(`🔄 Swapping elements at index ${animation.indices[0]} (${animation.heights[1]}) and ${animation.indices[1]} (${animation.heights[0]})`);
         setStats(prev => ({ ...prev, swaps: prev.swaps + 1, iteration: prev.iteration + 1 }));
       } else {
-        setCurrentStep(`Updating element at index ${animation.indices[0]}`);
+        setArray(prevArray => {
+          const newArray = [...prevArray];
+          newArray[animation.indices[0]] = animation.heights[0];
+          return newArray;
+        });
+        setCurrentStep(`✏️ Updating element at index ${animation.indices[0]} to value ${animation.heights[0]}`);
         setStats(prev => ({ ...prev, iteration: prev.iteration + 1 }));
       }
-    } else if (animation.type === "sorted") {
+
+      animation.indices.forEach((idx) => {
+        bars[idx].style.backgroundColor = "yellow";
+        bars[idx].style.transform = "scaleY(1)";
+      });
+
+      setTimeout(() => {
+        animation.indices.forEach(idx => {
+          if (bars[idx] && bars[idx].style.backgroundColor !== "green" && bars[idx].style.backgroundColor !== "purple") {
+            const isInRange = highlightedRange.start !== -1 &&
+                            idx >= highlightedRange.start &&
+                            idx <= highlightedRange.end;
+            bars[idx].style.backgroundColor = isInRange ? "rgba(135, 206, 250, 0.6)" : "turquoise";
+            bars[idx].style.transform = "scaleY(1)";
+          }
+        });
+      }, speed * 0.9);
+    } else if (animation.type === ANIMATION_TYPES.MARK_SORTED || animation.type === "sorted") {
       bars[animation.index].style.backgroundColor = "green";
-      setCurrentStep(`Element at index ${animation.index} is in correct position`);
+      bars[animation.index].style.transform = "scaleY(1)";
+      setCurrentStep(`✅ Element at index ${animation.index} (${array[animation.index]}) is now in its correct sorted position`);
+      setStats(prev => ({ ...prev, iteration: prev.iteration + 1 }));
+    } else if (animation.type === ANIMATION_TYPES.OVERWRITE) {
+      setArray(prevArray => {
+        const newArray = [...prevArray];
+        animation.indices.forEach((idx, i) => {
+          newArray[idx] = animation.heights[i];
+        });
+        return newArray;
+      });
+
+      animation.indices.forEach((idx) => {
+        bars[idx].style.backgroundColor = "yellow";
+        bars[idx].style.transform = "scaleY(1)";
+      });
+      setCurrentStep(`✏️ Overwriting element at index ${animation.indices[0]} with value ${animation.heights[0]}`);
+      setStats(prev => ({ ...prev, iteration: prev.iteration + 1 }));
+
+      setTimeout(() => {
+        animation.indices.forEach(idx => {
+          if (bars[idx] && bars[idx].style.backgroundColor !== "green" && bars[idx].style.backgroundColor !== "purple") {
+            const isInRange = highlightedRange.start !== -1 &&
+                            idx >= highlightedRange.start &&
+                            idx <= highlightedRange.end;
+            bars[idx].style.backgroundColor = isInRange ? "rgba(135, 206, 250, 0.6)" : "turquoise";
+            bars[idx].style.transform = "scaleY(1)";
+          }
+        });
+      }, speed * 0.75);
+    } else if (animation.type === ANIMATION_TYPES.HIGHLIGHT_RANGE) {
+      setHighlightedRange({ start: animation.start, end: animation.end });
+      for (let i = 0; i < bars.length; i++) {
+        if (i >= animation.start && i <= animation.end) {
+          if (bars[i].style.backgroundColor !== "green" &&
+              bars[i].style.backgroundColor !== "red" &&
+              bars[i].style.backgroundColor !== "yellow") {
+            bars[i].style.backgroundColor = "rgba(135, 206, 250, 0.6)";
+          }
+        } else {
+          if (bars[i].style.backgroundColor !== "green") {
+            bars[i].style.backgroundColor = "rgba(64, 224, 208, 0.3)";
+          }
+        }
+      }
+      setCurrentStep(`📍 Processing subarray from index ${animation.start} to ${animation.end}`);
+      setStats(prev => ({ ...prev, iteration: prev.iteration + 1 }));
+    } else if (animation.type === ANIMATION_TYPES.HIGHLIGHT_PIVOT) {
+      bars[animation.index].style.backgroundColor = "purple";
+      setCurrentStep(`🎯 Pivot element selected at index ${animation.index} (${array[animation.index]})`);
       setStats(prev => ({ ...prev, iteration: prev.iteration + 1 }));
     }
   }
 
   function nextStep() {
     if (currentAnimationIndex >= animations.length) {
-      setCurrentStep("Sorting complete!");
+      setCurrentStep("🎉 Sorting complete! The array is now sorted.");
       setIsRunning(false);
       return;
     }
 
     const bars = document.getElementsByClassName("array-bar");
     const animation = animations[currentAnimationIndex];
-    
+
     executeAnimation(animation, bars);
     setCurrentAnimationIndex(prev => prev + 1);
-
-    // Reset colors after a brief moment
-    setTimeout(() => {
-      if (animation.type === "comparison" || animation.type === "swap") {
-        animation.indices.forEach(idx => {
-          if (bars[idx].style.backgroundColor !== "green") {
-            bars[idx].style.backgroundColor = "turquoise";
-          }
-        });
-      }
-    }, speed / 2);
   }
 
   function startPauseAnimation() {
     if (!selectedAlgorithm) {
-      setCurrentStep("Please select a sorting algorithm first!");
+      setCurrentStep("⚠️ Please select a sorting algorithm first!");
       return;
     }
 
     if (isRunning && !isPaused) {
-      // Pause
+      isPausedRef.current = true;
       setIsPaused(true);
       clearAllTimeouts();
     } else if (isPaused) {
-      // Resume
+      isPausedRef.current = false;
       setIsPaused(false);
       continueAnimation();
     } else {
-      // Start fresh
+      isPausedRef.current = false;
       setIsRunning(true);
       setIsPaused(false);
       setCurrentAnimationIndex(0);
-      continueAnimation();
+      setTimeout(() => continueAnimation(), 0);
     }
   }
 
   function continueAnimation() {
-    if (currentAnimationIndex >= animations.length) {
-      setCurrentStep("Sorting complete!");
-      setIsRunning(false);
-      return;
+    if (isPausedRef.current) return;
+
+    let index = currentAnimationIndex;
+
+    function runStep() {
+      if (isPausedRef.current) return;
+
+      if (index >= animations.length) {
+        setCurrentStep("🎉 Sorting complete! The array is now sorted.");
+        setIsRunning(false);
+        setIsPaused(false);
+        isPausedRef.current = false;
+        return;
+      }
+
+      const bars = document.getElementsByClassName("array-bar");
+      const animation = animations[index];
+
+      executeAnimation(animation, bars);
+
+      index += 1;
+      setCurrentAnimationIndex(index);
+
+      const timeoutId = setTimeout(() => runStep(), speedRef.current);
+      setTimeoutIds([timeoutId]);
     }
 
-    const bars = document.getElementsByClassName("array-bar");
-    const newTimeoutIds = [];
-
-    for (let i = currentAnimationIndex; i < animations.length; i++) {
-      const animation = animations[i];
-      const delay = (i - currentAnimationIndex) * speed;
-
-      const timeoutId = setTimeout(() => {
-        if (!isPaused) {
-          executeAnimation(animation, bars);
-          setCurrentAnimationIndex(i + 1);
-
-          // Reset colors
-          setTimeout(() => {
-            if (animation.type === "comparison" || animation.type === "swap") {
-              animation.indices.forEach(idx => {
-                if (bars[idx].style.backgroundColor !== "green") {
-                  bars[idx].style.backgroundColor = "turquoise";
-                }
-              });
-            }
-          }, speed / 2);
-
-          if (i === animations.length - 1) {
-            setTimeout(() => {
-              setCurrentStep("Sorting complete!");
-              setIsRunning(false);
-            }, speed);
-          }
-        }
-      }, delay);
-
-      newTimeoutIds.push(timeoutId);
-    }
-
-    setTimeoutIds(newTimeoutIds);
+    runStep();
   }
 
   function startBubbleSort() {
@@ -207,6 +277,7 @@ function ArrayVisualizer() {
     setIsRunning(false);
     setIsPaused(false);
     setStats({ comparisons: 0, swaps: 0, iteration: 0 });
+    setCurrentStep("📋 Bubble Sort loaded. Click 'Start' to begin sorting!");
   }
 
   function startMergeSort() {
@@ -217,6 +288,7 @@ function ArrayVisualizer() {
     setIsRunning(false);
     setIsPaused(false);
     setStats({ comparisons: 0, swaps: 0, iteration: 0 });
+    setCurrentStep("📋 Merge Sort loaded. Click 'Start' to begin sorting!");
   }
 
   function startQuickSort() {
@@ -227,274 +299,288 @@ function ArrayVisualizer() {
     setIsRunning(false);
     setIsPaused(false);
     setStats({ comparisons: 0, swaps: 0, iteration: 0 });
+    setCurrentStep("📋 Quick Sort loaded. Click 'Start' to begin sorting!");
   }
 
   function handleSpeedChange(e) {
-    setSpeed(Number(e.target.value));
+    const val = Number(e.target.value);
+    setSpeed(val);
+    speedRef.current = val;
+  }
+
+  function handleArraySizeChange(e) {
+    const newSize = Number(e.target.value);
+    setArraySize(newSize);
+    setTimeout(() => generateArray(), 0);
   }
 
   return (
     <div style={{
-      minHeight: "100vh",
-      padding: "20px"
+      height: "100vh",
+      overflow: "hidden",
+      background: "linear-gradient(135deg, #e9eef5, #d6e4f0)",
+      display: "flex",
+      flexDirection: "column",
+      fontFamily: "'Segoe UI', sans-serif",
+      color: "#1e293b",
+      boxSizing: "border-box"
     }}>
-      {/* Control Panel */}
-      <div style={{ 
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        gap: "15px",
-        marginBottom: "30px",
-        flexWrap: "wrap"
+      {/* Page Title */}
+      <h1 style={{
+        textAlign: "center",
+        padding: "10px 0 6px",
+        fontSize: "22px",
+        fontWeight: "700",
+        letterSpacing: "1px",
+        color: "#1e293b",
+        margin: 0,
+        flexShrink: 0
       }}>
-        <button onClick={generateArray} style={{
-          padding: "12px 24px",
-          fontSize: "16px",
-          cursor: "pointer",
-          borderRadius: "5px",
-          border: "2px solid #fff",
-          backgroundColor: "transparent",
-          color: "#fff",
-          fontWeight: "bold"
-        }}>Generate Array</button>
-        
-        <button onClick={startBubbleSort} style={{
-          padding: "12px 24px",
-          fontSize: "16px",
-          cursor: "pointer",
-          borderRadius: "5px",
-          border: "2px solid #fff",
-          backgroundColor: "transparent",
-          color: "#fff",
-          fontWeight: "bold"
-        }}>Bubble Sort</button>
-        
-        <button onClick={startMergeSort} style={{
-          padding: "12px 24px",
-          fontSize: "16px",
-          cursor: "pointer",
-          borderRadius: "5px",
-          border: "2px solid #fff",
-          backgroundColor: "transparent",
-          color: "#fff",
-          fontWeight: "bold"
-        }}>Merge Sort</button>
-        
-        <button onClick={startQuickSort} style={{
-          padding: "12px 24px",
-          fontSize: "16px",
-          cursor: "pointer",
-          borderRadius: "5px",
-          border: "2px solid #fff",
-          backgroundColor: "transparent",
-          color: "#fff",
-          fontWeight: "bold"
-        }}>Quick Sort</button>
+        Sorting Algorithm Visualizer
+      </h1>
 
-        <div style={{ display: "flex", alignItems: "center", marginLeft: "20px" }}>
-          <label htmlFor="speed-slider" style={{ fontSize: "16px", color: "#fff", marginRight: "10px" }}>
-            Speed: {speed <= 1000 ? "Fast" : speed <= 2500 ? "Medium" : "Slow"}
-          </label>
-          <input
-            id="speed-slider"
-            type="range"
-            min="200"
-            max="5000"
-            step="100"
-            value={speed}
-            onChange={handleSpeedChange}
-            style={{ width: "200px" }}
-          />
-        </div>
-      </div>
-
-      {/* Playback Controls */}
+      {/* Three-column layout */}
       <div style={{
         display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        gap: "15px",
-        marginBottom: "20px"
+        flex: 1,
+        gap: "14px",
+        padding: "0 16px 12px",
+        overflow: "hidden",
+        minHeight: 0
       }}>
-        <button onClick={startPauseAnimation} style={{
-          padding: "10px 20px",
-          fontSize: "15px",
-          cursor: "pointer",
-          borderRadius: "5px",
-          border: "2px solid #4CAF50",
-          backgroundColor: isRunning && !isPaused ? "#f44336" : "#4CAF50",
-          color: "#fff",
-          fontWeight: "bold"
-        }}>
-          {isRunning && !isPaused ? "Pause" : isPaused ? "Resume" : "Start"}
-        </button>
 
-        <button onClick={nextStep} disabled={isRunning && !isPaused} style={{
-          padding: "10px 20px",
-          fontSize: "15px",
-          cursor: isRunning && !isPaused ? "not-allowed" : "pointer",
-          borderRadius: "5px",
-          border: "2px solid #2196F3",
-          backgroundColor: "#2196F3",
-          color: "#fff",
-          fontWeight: "bold",
-          opacity: isRunning && !isPaused ? 0.5 : 1
-        }}>
-          Next Step
-        </button>
-
-        <button onClick={resetVisualization} style={{
-          padding: "10px 20px",
-          fontSize: "15px",
-          cursor: "pointer",
-          borderRadius: "5px",
-          border: "2px solid #FF9800",
-          backgroundColor: "#FF9800",
-          color: "#fff",
-          fontWeight: "bold"
-        }}>
-          Reset
-        </button>
-      </div>
-
-      {/* Color Legend */}
-      <div style={{ 
-        textAlign: "center",
-        marginBottom: "20px"
-      }}>
-        <span style={{ marginRight: "20px", color: "#fff" }}>
-          <span style={{ 
-            display: "inline-block", 
-            width: "20px", 
-            height: "20px", 
-            backgroundColor: "red", 
-            marginRight: "5px",
-            verticalAlign: "middle"
-          }}></span>
-          Comparing
-        </span>
-        <span style={{ marginRight: "20px", color: "#fff" }}>
-          <span style={{ 
-            display: "inline-block", 
-            width: "20px", 
-            height: "20px", 
-            backgroundColor: "yellow", 
-            marginRight: "5px",
-            verticalAlign: "middle"
-          }}></span>
-          Swapping
-        </span>
-        <span style={{ color: "#fff" }}>
-          <span style={{ 
-            display: "inline-block", 
-            width: "20px", 
-            height: "20px", 
-            backgroundColor: "green", 
-            marginRight: "5px",
-            verticalAlign: "middle"
-          }}></span>
-          Sorted
-        </span>
-      </div>
-
-      {/* Algorithm Info Panel */}
-      {selectedAlgorithm && (
+        {/* ── LEFT: Controls ── */}
         <div style={{
-          maxWidth: "700px",
-          margin: "0 auto 15px auto",
-          padding: "8px 15px",
-          backgroundColor: "rgba(255, 255, 255, 0.08)",
-          borderRadius: "4px",
-          border: "1px solid rgba(255, 255, 255, 0.2)",
-          textAlign: "center",
-          color: "#fff",
+          width: "220px",
+          flexShrink: 0,
+          backgroundColor: "#ffffff",
+          borderRadius: "12px",
+          padding: "16px 14px",
+          boxShadow: "0 10px 25px rgba(0,0,0,0.08)",
           display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          gap: "25px",
-          flexWrap: "wrap",
-          fontSize: "14px"
+          flexDirection: "column",
+          gap: "14px",
+          overflowY: "auto"
         }}>
-          <span style={{ fontWeight: "bold" }}>{algorithmInfo[selectedAlgorithm].name}</span>
-          <span>Time: {algorithmInfo[selectedAlgorithm].timeComplexity}</span>
-          <span>Space: {algorithmInfo[selectedAlgorithm].spaceComplexity}</span>
-        </div>
-      )}
+          {/* Algorithm Selection */}
+          <div>
+            <p style={{ margin: "0 0 8px", fontSize: "10px", textTransform: "uppercase", letterSpacing: "1px", color: "#64748b" }}>Algorithm</p>
+            <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+              {[
+                { label: "Bubble Sort", fn: startBubbleSort, key: "bubble" },
+                { label: "Merge Sort",  fn: startMergeSort,  key: "merge"  },
+                { label: "Quick Sort",  fn: startQuickSort,  key: "quick"  },
+              ].map(({ label, fn, key }) => (
+                <button key={key} onClick={fn} style={{
+                  padding: "8px 12px", fontSize: "13px", cursor: "pointer",
+                  borderRadius: "8px",
+                  border: selectedAlgorithm === key ? "2px solid #6366f1" : "2px solid #e2e8f0",
+                  backgroundColor: selectedAlgorithm === key ? "rgba(99,102,241,0.1)" : "#f8fafc",
+                  color: "#1e293b", fontWeight: "600", transition: "all 0.2s ease", textAlign: "left"
+                }}
+                  onMouseEnter={e => e.currentTarget.style.transform = "scale(1.02)"}
+                  onMouseLeave={e => e.currentTarget.style.transform = "scale(1)"}
+                >{label}</button>
+              ))}
+            </div>
+          </div>
 
-      {/* Statistics Panel */}
-      {selectedAlgorithm && (
-        <div style={{
-          maxWidth: "700px",
-          margin: "0 auto 15px auto",
-          padding: "8px 15px",
-          backgroundColor: "rgba(255, 200, 100, 0.1)",
-          borderRadius: "4px",
-          border: "1px solid rgba(255, 200, 100, 0.3)",
-          textAlign: "center",
-          color: "#fff",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          gap: "30px",
-          flexWrap: "wrap",
-          fontSize: "14px"
-        }}>
-          <span><strong>Comparisons:</strong> {stats.comparisons}</span>
-          <span><strong>Swaps:</strong> {stats.swaps}</span>
-          <span><strong>Iteration:</strong> {stats.iteration}</span>
-        </div>
-      )}
+          {/* Speed Slider */}
+          <div>
+            <p style={{ margin: "0 0 6px", fontSize: "10px", textTransform: "uppercase", letterSpacing: "1px", color: "#64748b" }}>
+              Speed — <span style={{ color: "#6366f1" }}>{speed <= 1500 ? "Fast" : speed <= 2800 ? "Medium" : "Slow"}</span>
+            </p>
+            <input id="speed-slider" type="range" min="500" max="4000" step="100"
+              value={speed} onChange={handleSpeedChange}
+              style={{ width: "100%", accentColor: "#6366f1" }}
+            />
+          </div>
 
-      {/* Step Explanation Panel */}
-      {currentStep && (
-        <div style={{
-          maxWidth: "700px",
-          margin: "0 auto 15px auto",
-          padding: "10px 20px",
-          backgroundColor: "rgba(100, 200, 255, 0.15)",
-          borderRadius: "4px",
-          border: "1px solid rgba(100, 200, 255, 0.3)",
-          textAlign: "center",
-          color: "#fff",
-          fontSize: "15px",
-          fontWeight: "500",
-          minHeight: "40px",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center"
-        }}>
-          {currentStep}
-        </div>
-      )}
+          {/* Array Size Slider */}
+          <div>
+            <p style={{ margin: "0 0 6px", fontSize: "10px", textTransform: "uppercase", letterSpacing: "1px", color: "#64748b" }}>
+              Array Size — <span style={{ color: "#6366f1" }}>{arraySize}</span>
+            </p>
+            <input id="array-size-slider" type="range" min="5" max="80" step="1"
+              value={arraySize} onChange={handleArraySizeChange}
+              style={{ width: "100%", accentColor: "#6366f1" }}
+            />
+          </div>
 
-      {/* Visualization Area */}
-      <div style={{ 
-        display: "flex", 
-        alignItems: "flex-end", 
-        justifyContent: "center",
-        height: "70vh",
-        width: "95%",
-        margin: "0 auto",
-        gap: "2px"
-      }}>
-        {array.map((value, idx) => (
-          <div
-            className="array-bar"
-            key={idx}
-            style={{
-              backgroundColor: "turquoise",
-              height: `${value}px`,
-              flex: "1",
-              minWidth: "8px",
-              maxWidth: "80px",
-              transition: "height 0.25s ease, background-color 0.25s ease",
-              borderRadius: "3px 3px 0 0"
+          {/* Playback Buttons */}
+          <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+            <p style={{ margin: "0 0 2px", fontSize: "10px", textTransform: "uppercase", letterSpacing: "1px", color: "#64748b" }}>Controls</p>
+            <button onClick={startPauseAnimation} style={{
+              padding: "9px", fontSize: "13px", cursor: "pointer", borderRadius: "8px", border: "none",
+              backgroundColor: isRunning && !isPaused ? "#e53935" : "#43a047",
+              color: "#fff", fontWeight: "700", transition: "all 0.2s ease"
             }}
-          ></div>
-        ))}
+              onMouseEnter={e => e.currentTarget.style.transform = "scale(1.02)"}
+              onMouseLeave={e => e.currentTarget.style.transform = "scale(1)"}
+            >
+              {isRunning && !isPaused ? "⏸ Pause" : isPaused ? "▶ Resume" : "▶ Start"}
+            </button>
+            <button onClick={nextStep} disabled={isRunning && !isPaused} style={{
+              padding: "9px", fontSize: "13px",
+              cursor: isRunning && !isPaused ? "not-allowed" : "pointer",
+              borderRadius: "8px", border: "none", backgroundColor: "#1e88e5",
+              color: "#fff", fontWeight: "700",
+              opacity: isRunning && !isPaused ? 0.45 : 1, transition: "all 0.2s ease"
+            }}
+              onMouseEnter={e => { if (!(isRunning && !isPaused)) e.currentTarget.style.transform = "scale(1.02)"; }}
+              onMouseLeave={e => e.currentTarget.style.transform = "scale(1)"}
+            >⏭ Next Step</button>
+            <button onClick={resetVisualization} style={{
+              padding: "9px", fontSize: "13px", cursor: "pointer", borderRadius: "8px",
+              border: "none", backgroundColor: "#fb8c00", color: "#fff", fontWeight: "700", transition: "all 0.2s ease"
+            }}
+              onMouseEnter={e => e.currentTarget.style.transform = "scale(1.02)"}
+              onMouseLeave={e => e.currentTarget.style.transform = "scale(1)"}
+            >↺ Reset</button>
+            <button onClick={generateArray} style={{
+              padding: "9px", fontSize: "13px", cursor: "pointer", borderRadius: "8px",
+              border: "2px solid #e2e8f0", backgroundColor: "transparent",
+              color: "#1e293b", fontWeight: "700", transition: "all 0.2s ease"
+            }}
+              onMouseEnter={e => e.currentTarget.style.transform = "scale(1.02)"}
+              onMouseLeave={e => e.currentTarget.style.transform = "scale(1)"}
+            >⟳ New Array</button>
+          </div>
+        </div>
+
+        {/* ── CENTER: Visualization ── */}
+        <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "8px", minWidth: 0, overflow: "hidden" }}>
+
+          {/* Legend */}
+          <div style={{
+            display: "flex", flexWrap: "wrap", justifyContent: "center",
+            gap: "14px", fontSize: "12px", color: "#475569",
+            padding: "8px 14px",
+            backgroundColor: "#ffffff",
+            borderRadius: "10px",
+            border: "1px solid #e2e8f0",
+            boxShadow: "0 2px 8px rgba(0,0,0,0.05)",
+            flexShrink: 0
+          }}>
+            {[
+              { color: "#ef5350",               label: "Comparing"    },
+              { color: "#ffee58",               label: "Swapping"     },
+              { color: "#66bb6a",               label: "Sorted"       },
+              { color: "rgba(135,206,250,0.9)", label: "Active Range" },
+              { color: "#ab47bc",               label: "Pivot"        },
+            ].map(({ color, label }) => (
+              <span key={label} style={{ display: "flex", alignItems: "center", gap: "5px" }}>
+                <span style={{ width: "12px", height: "12px", borderRadius: "3px", backgroundColor: color, flexShrink: 0, border: "1px solid rgba(0,0,0,0.1)" }}></span>
+                {label}
+              </span>
+            ))}
+          </div>
+
+          {/* Visualization Area */}
+          <div style={{
+            flex: 1,
+            backgroundColor: "#ffffff",
+            borderRadius: "12px",
+            border: "1px solid #e2e8f0",
+            boxShadow: "0 10px 25px rgba(0,0,0,0.08)",
+            padding: "12px 12px 0",
+            display: "flex",
+            alignItems: "flex-end",
+            justifyContent: "center",
+            gap: "2px",
+            overflow: "hidden",
+            minHeight: 0
+          }}>
+            {array.map((value, idx) => (
+              <div key={idx} style={{
+                display: "flex", flexDirection: "column", alignItems: "center",
+                justifyContent: "flex-end", flex: "1", minWidth: "4px", maxWidth: "60px", height: "100%"
+              }}>
+                {array.length <= 50 && (
+                  <div style={{
+                    fontSize: array.length <= 20 ? "10px" : array.length <= 35 ? "8px" : "7px",
+                    color: "#475569", fontWeight: "bold", marginBottom: "2px",
+                    textAlign: "center", userSelect: "none"
+                  }}>
+                    {value}
+                  </div>
+                )}
+                <div className="array-bar" style={{
+                  backgroundColor: "turquoise",
+                  height: `${value}px`,
+                  width: "100%",
+                  transition: "height 0.3s ease, background-color 0.2s ease, transform 0.2s ease",
+                  borderRadius: "4px 4px 0 0",
+                  transformOrigin: "bottom"
+                }} />
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* ── RIGHT: Info Panel ── */}
+        <div style={{
+          width: "210px",
+          flexShrink: 0,
+          display: "flex",
+          flexDirection: "column",
+          gap: "12px",
+          overflowY: "auto"
+        }}>
+
+          {/* Current Step */}
+          <div style={{
+            padding: "12px 14px",
+            backgroundColor: currentStep ? "rgba(99,102,241,0.08)" : "#ffffff",
+            borderRadius: "12px",
+            border: currentStep ? "1px solid rgba(99,102,241,0.3)" : "1px solid #e2e8f0",
+            fontSize: "13px", fontWeight: "600",
+            color: "#1e293b",
+            boxShadow: "0 10px 25px rgba(0,0,0,0.08)",
+            transition: "all 0.3s ease",
+            lineHeight: "1.5"
+          }}>
+            <p style={{ margin: "0 0 6px", fontSize: "10px", textTransform: "uppercase", letterSpacing: "1px", color: "#64748b" }}>Current Step</p>
+            {currentStep || "Select an algorithm and press ▶ Start to begin"}
+          </div>
+
+          {/* Statistics */}
+          <div style={{
+            backgroundColor: "#fffbeb",
+            borderRadius: "12px",
+            border: "1px solid #fde68a",
+            padding: "12px 14px",
+            display: "flex", flexDirection: "column", gap: "6px",
+            fontSize: "13px", color: "#1e293b",
+            boxShadow: "0 10px 25px rgba(0,0,0,0.08)"
+          }}>
+            <p style={{ margin: "0 0 4px", fontSize: "10px", textTransform: "uppercase", letterSpacing: "1px", color: "#64748b" }}>Statistics</p>
+            <span>🔍 Comparisons: <strong>{stats.comparisons}</strong></span>
+            <span>🔄 Swaps: <strong>{stats.swaps}</strong></span>
+            <span>🔢 Iterations: <strong>{stats.iteration}</strong></span>
+          </div>
+
+          {/* Complexity */}
+          {selectedAlgorithm && (
+            <div style={{
+              backgroundColor: "#f1f5f9",
+              borderRadius: "12px",
+              border: "1px solid #e2e8f0",
+              padding: "12px 14px",
+              fontSize: "13px", display: "flex", flexDirection: "column", gap: "6px", color: "#1e293b",
+              boxShadow: "0 10px 25px rgba(0,0,0,0.08)"
+            }}>
+              <p style={{ margin: "0 0 4px", fontSize: "10px", textTransform: "uppercase", letterSpacing: "1px", color: "#64748b" }}>Complexity</p>
+              <span>⏱ Time: <strong>{algorithmInfo[selectedAlgorithm].timeComplexity}</strong></span>
+              <span>💾 Space: <strong>{algorithmInfo[selectedAlgorithm].spaceComplexity}</strong></span>
+            </div>
+          )}
+        </div>
+
       </div>
     </div>
   );
 }
+
 
 export default ArrayVisualizer;

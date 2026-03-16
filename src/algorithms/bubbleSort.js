@@ -1,26 +1,45 @@
-export function bubbleSort(arr) {
+export function bubbleSort(array) {
   const animations = [];
-  const array = arr.slice();
+  const arr = [...array];
+  const n = arr.length;
 
-  for (let i = 0; i < array.length - 1; i++) {
-    for (let j = 0; j < array.length - i - 1; j++) {
-      // Comparison - color red
-      animations.push({ type: "comparison", indices: [j, j + 1] });
+  for (let i = 0; i < n - 1; i++) {
+    for (let j = 0; j < n - i - 1; j++) {
 
-      if (array[j] > array[j + 1]) {
-        // Swap - color yellow
-        animations.push({ type: "swap", indices: [j, j + 1], heights: [array[j + 1], array[j]] });
+      // comparison animation
+      animations.push({
+        type: "comparison",
+        indices: [j, j + 1]
+      });
 
-        let temp = array[j];
-        array[j] = array[j + 1];
-        array[j + 1] = temp;
+      if (arr[j] > arr[j + 1]) {
+
+        // swap values
+        const temp = arr[j];
+        arr[j] = arr[j + 1];
+        arr[j + 1] = temp;
+
+        // swap animation
+        animations.push({
+          type: "swap",
+          indices: [j, j + 1],
+          heights: [arr[j], arr[j + 1]]
+        });
       }
     }
-    // Mark sorted position - color green
-    animations.push({ type: "sorted", index: array.length - i - 1 });
+
+    // mark last element sorted
+    animations.push({
+      type: "sorted",
+      index: n - i - 1
+    });
   }
-  // Mark first element as sorted
-  animations.push({ type: "sorted", index: 0 });
+
+  // first element sorted
+  animations.push({
+    type: "sorted",
+    index: 0
+  });
 
   return animations;
 }
