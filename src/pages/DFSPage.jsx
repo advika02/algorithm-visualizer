@@ -1,10 +1,10 @@
 import { useNavigate } from "react-router-dom";
 import { useRef, useState } from "react";
-import { BFSVisualizer } from "../components/BFSVisualizer";
+import { DFSVisualizer } from "../components/DFSVisualizer";
 import { GraphInputPanel } from "../components/GraphInputPanel";
 import { generateRandomGraph } from "../algorithms/parseGraph";
 
-export default function BFSPage() {
+export default function DFSPage() {
   const navigate = useNavigate();
   const [speed, setSpeed] = useState(1200);
   const speedRef = useRef(1200);
@@ -42,17 +42,15 @@ export default function BFSPage() {
         display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "nowrap",
         position: "sticky", top: 0, zIndex: 10
       }}>
-        {/* Left */}
         <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
           <button onClick={() => navigate("/")}
             style={{ padding: "5px 14px", fontSize: "12px", fontWeight: "600", borderRadius: "8px", border: "1px solid rgba(59,130,246,0.4)", backgroundColor: "transparent", color: "#93c5fd", cursor: "pointer", transition: "all 0.2s ease", whiteSpace: "nowrap" }}
             onMouseEnter={e => { e.currentTarget.style.backgroundColor = "rgba(59,130,246,0.15)"; e.currentTarget.style.borderColor = "#3b82f6"; e.currentTarget.style.color = "#60a5fa"; }}
             onMouseLeave={e => { e.currentTarget.style.backgroundColor = "transparent"; e.currentTarget.style.borderColor = "rgba(59,130,246,0.4)"; e.currentTarget.style.color = "#93c5fd"; }}
           >← Home</button>
-          <h1 style={{ margin: 0, fontSize: "15px", fontWeight: "600", color: "#d1d5db", letterSpacing: "0.2px", whiteSpace: "nowrap" }}>Breadth-First Search</h1>
+          <h1 style={{ margin: 0, fontSize: "15px", fontWeight: "600", color: "#d1d5db", letterSpacing: "0.2px", whiteSpace: "nowrap" }}>Depth-First Search</h1>
         </div>
 
-        {/* Right */}
         <div style={{ display: "flex", alignItems: "center", gap: "10px", flexShrink: 0 }}>
           <label style={{ fontSize: "11px", textTransform: "uppercase", letterSpacing: "1px", color: "#9ca3af" }}>Speed</label>
           <input type="range" min="500" max="4000" step="100" value={speed} onChange={handleSpeedChange} style={{ accentColor: "#3b82f6", width: "110px" }} />
@@ -71,17 +69,18 @@ export default function BFSPage() {
           {/* Complexity */}
           <div style={{ marginTop: "12px", backgroundColor: "#ffffff", borderRadius: "12px", padding: "14px", boxShadow: "0 6px 20px rgba(0,0,0,0.2)", fontSize: "13px", color: "#0B1F4A" }}>
             <p style={{ margin: "0 0 6px", fontSize: "10px", textTransform: "uppercase", letterSpacing: "1px", color: "#6b7280" }}>Complexity</p>
-            <span style={{ fontWeight: "700", fontSize: "14px", color: "#1d4ed8", display: "block", marginBottom: "6px" }}>BFS</span>
+            <span style={{ fontWeight: "700", fontSize: "14px", color: "#1d4ed8", display: "block", marginBottom: "6px" }}>DFS</span>
             <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
               <span>⏱ Time: <strong>O(V + E)</strong></span>
               <span>💾 Space: <strong>O(V)</strong></span>
+              <span style={{ fontSize: "11px", color: "#6b7280", marginTop: "4px" }}>Goes deep before backtracking</span>
             </div>
           </div>
         </div>
 
         {/* Visualizer */}
         <div style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column", minWidth: 0 }}>
-          <BFSVisualizer speedRef={speedRef} graph={graph} startNode={startNode} onGenerate={handleGenerate} />
+          <DFSVisualizer speedRef={speedRef} graph={graph} startNode={startNode} onGenerate={handleGenerate} />
         </div>
       </div>
     </div>

@@ -3,6 +3,8 @@ import HomePage from "./pages/HomePage";
 import SortingPage from "./pages/SortingPage";
 import BinarySearchPage from "./pages/BinarySearchPage";
 import BFSPage from "./pages/BFSPage";
+import DFSPage from "./pages/DFSPage";
+import DijkstraPage from "./pages/DijkstraPage";
 import ComingSoonPage from "./pages/ComingSoonPage";
 
 export default function App() {
@@ -19,6 +21,8 @@ export default function App() {
 
         {/* Graph */}
         <Route path="/graph/bfs" element={<BFSPage />} />
+        <Route path="/graph/dfs" element={<DFSPage />} />
+        <Route path="/graph/dijkstra" element={<DijkstraPage />} />
         <Route path="/graph/:algo" element={<ComingSoonPage />} />
 
         {/* Fallback */}

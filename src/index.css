@@ -1,7 +1,8 @@
 :root {
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+  font-family: 'Segoe UI', system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
   font-weight: 400;
+  min-width: 320px;
 
   color-scheme: light dark;
   color: rgba(255, 255, 255, 0.87);
@@ -22,16 +23,23 @@ a:hover {
   color: #535bf2;
 }
 
-body {
-  margin: 0;
-  min-width: 320px;
-  min-height: 100vh;
-  overflow-y: auto;
+/* ── Global reset for full-height no-scroll layout ── */
+*, *::before, *::after {
+  box-sizing: border-box;
 }
 
-h1 {
-  font-size: 3.2em;
-  line-height: 1.1;
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+#root {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
 button {
@@ -43,14 +51,21 @@ button {
   font-family: inherit;
   background-color: #1a1a1a;
   cursor: pointer;
-  transition: border-color 0.25s;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.2s ease, background-color 0.2s ease;
 }
 button:hover {
   border-color: #646cff;
+  transform: scale(1.04);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
 }
-button:focus,
-button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
+button:active {
+  transform: scale(0.97);
+  box-shadow: none;
+}
+button:disabled {
+  transform: none !important;
+  box-shadow: none !important;
+  cursor: not-allowed;
 }
 
 @media (prefers-color-scheme: light) {
@@ -64,4 +79,54 @@ button:focus-visible {
   button {
     background-color: #f9f9f9;
   }
+}
+
+/* ── Home page: allow scrolling ── */
+.page-scrollable {
+  overflow-y: auto;
+  height: 100%;
+}
+.array-bar {
+  transition: height 0.28s cubic-bezier(0.4, 0, 0.2, 1),
+              background-color 0.25s ease,
+              transform 0.2s ease;
+  border-radius: 4px 4px 0 0;
+  transform-origin: bottom;
+  will-change: height, background-color;
+}
+
+/* ── Scrollable side panels ── */
+.side-panel {
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 transparent;
+}
+.side-panel::-webkit-scrollbar { width: 4px; }
+.side-panel::-webkit-scrollbar-track { background: transparent; }
+.side-panel::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+
+/* ── Card hover lift ── */
+.viz-card {
+  transition: box-shadow 0.2s ease;
+}
+.viz-card:hover {
+  box-shadow: 0 8px 24px rgba(0,0,0,0.1) !important;
+}
+
+/* ── Graph SVG transitions ── */
+.graph-node {
+  transition: fill 0.3s ease, stroke 0.3s ease, filter 0.3s ease;
+}
+.graph-edge {
+  transition: stroke 0.3s ease, stroke-width 0.3s ease, opacity 0.3s ease;
+}
+
+/* ── Step panel pulse ── */
+@keyframes stepPulse {
+  0%   { box-shadow: 0 0 0 0 rgba(99,102,241,0.25); }
+  70%  { box-shadow: 0 0 0 6px rgba(99,102,241,0); }
+  100% { box-shadow: 0 0 0 0 rgba(99,102,241,0); }
+}
+.step-panel-active {
+  animation: stepPulse 0.6s ease-out;
 }
