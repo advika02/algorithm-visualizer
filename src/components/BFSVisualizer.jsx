@@ -130,7 +130,7 @@ export function BFSVisualizer({ speedRef, graph, startNode: startNodeProp, onGen
     <div style={{ flex: 1, minHeight: 0, display: "flex", gap: "12px", overflow: "hidden" }}>
 
       {/* Graph SVG card */}
-      <div style={{ flex: 1, backgroundColor: "#ffffff", borderRadius: "12px", boxShadow: "0 8px 30px rgba(0,0,0,0.3)", display: "flex", flexDirection: "column", overflow: "hidden", minHeight: 0 }}>
+      <div className="top-visualizer-section" style={{ flex: 1, backgroundColor: "#ffffff", borderRadius: "12px", boxShadow: "0 8px 30px rgba(0,0,0,0.3)", display: "flex", flexDirection: "column", overflow: "hidden", minHeight: 0 }}>
 
         {/* Controls */}
         <div style={{ display: "flex", alignItems: "center", gap: "8px", flexShrink: 0, padding: "10px 14px", borderBottom: "1px solid #f1f5f9", flexWrap: "wrap", backgroundColor: "#f8fafc" }}>
@@ -181,7 +181,7 @@ export function BFSVisualizer({ speedRef, graph, startNode: startNodeProp, onGen
           </span>
         </div>
 
-        <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden" }}>
+        <div className="resp-graph-svg" style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden" }}>
           <svg viewBox={`0 0 ${W} ${H}`} style={{ width: "100%", height: "100%", maxHeight: "100%" }}>
             {graph.edges.map(([u, v]) => {
               const nu = graph.nodes[u], nv = graph.nodes[v];
@@ -205,7 +205,7 @@ export function BFSVisualizer({ speedRef, graph, startNode: startNodeProp, onGen
       </div>
 
       {/* Right info column */}
-      <div className="side-panel" style={{ width: "190px", flexShrink: 0, display: "flex", flexDirection: "column", gap: "10px", overflowY: "auto", maxHeight: "100%" }}>
+      <div className="side-panel bottom-content" style={{ width: "190px", flexShrink: 0, display: "flex", flexDirection: "column", gap: "10px", overflowY: "auto", maxHeight: "100%" }}>
 
         <div style={{ ...CARD, transition: "border-color 0.3s ease" }}>
           <p style={LABEL}>Step</p>

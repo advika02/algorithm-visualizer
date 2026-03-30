@@ -6,7 +6,7 @@ export default function SortingPage() {
   const { algorithm } = useParams();
 
   return (
-    <div style={{ height: "100vh", display: "flex", flexDirection: "column", background: "linear-gradient(to bottom, #0B1F4A, #0f2a66)", fontFamily: "'Segoe UI', system-ui, sans-serif", overflow: "hidden" }}>
+    <div className="page-wrapper" style={{ background: "linear-gradient(to bottom, #0B1F4A, #0f2a66)", fontFamily: "'Segoe UI', system-ui, sans-serif" }}>
       <div style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column" }}>
         <ArrayVisualizer initialAlgorithm={algorithm} onHome={() => navigate("/")} />
       </div>

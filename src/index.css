@@ -192,10 +192,25 @@ button:disabled {
   .resp-body { padding: 10px 12px; gap: 10px; }
   .resp-left-panel { width: 190px; }
   .resp-section-grid { gap: 16px; }
+
+  /* Restore scrolling on tablet/mobile — desktop keeps overflow: hidden */
+  html, body, #root {
+    overflow: visible;
+    height: auto;
+  }
+  .resp-body {
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
 }
 
 /* ── Mobile (≤ 640px) ── */
 @media (max-width: 640px) {
+  html, body, #root {
+    overflow: visible;
+    height: auto;
+  }
+
   .resp-nav {
     flex-wrap: wrap;
     padding: 6px 10px;
@@ -210,13 +225,30 @@ button:disabled {
     padding: 8px 10px;
     gap: 8px;
     overflow-y: auto;
+    overflow-x: hidden;
   }
   .resp-left-panel {
     width: 100%;
     flex-shrink: 1;
     overflow-y: visible;
   }
-  .resp-viz-col { min-height: 300px; }
+  .resp-viz-col {
+    min-height: 300px;
+    overflow: visible;
+  }
+
+  /* Controls: prevent overlap */
+  .resp-controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  /* Bars/SVG: full width, no fixed height */
+  svg {
+    width: 100% !important;
+    height: auto !important;
+  }
 
   /* Home page */
   .resp-section-grid {
@@ -224,6 +256,292 @@ button:disabled {
     gap: 12px;
   }
 
-  /* Smaller button text */
+  /* Slightly smaller button text on mobile */
   button { font-size: 0.85em; }
+}
+
+/* ── Page wrapper: full-height on desktop, auto on mobile ── */
+.page-wrapper {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+@media (max-width: 1024px) {
+  .page-wrapper {
+    height: auto;
+    min-height: 100vh;
+    overflow-x: hidden;
+    overflow-y: auto;
+  }
+  /* Controls bar: allow wrapping on tablet/mobile */
+  .resp-controls-bar {
+    flex-wrap: wrap !important;
+    gap: 8px !important;
+  }
+}
+
+/* ── Mobile-only layout improvements ── */
+
+/* Sliders: stack vertically, full width, label above */
+@media (max-width: 640px) {
+  .resp-sliders {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
+  }
+  .resp-slider-row {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    width: 100%;
+  }
+  .resp-slider-row label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #9ca3af;
+  }
+  .resp-slider-row input[type="range"] {
+    width: 100%;
+  }
+
+  /* Controls bar: wrap buttons, full width */
+  .resp-controls-wrap {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    width: 100%;
+  }
+  .resp-controls-wrap button {
+    flex: 1;
+    min-width: 70px;
+  }
+
+  /* Visualizer bars: ensure visible */
+  .resp-bars-container {
+    width: 100%;
+    height: auto !important;
+    min-height: 200px;
+    overflow: visible !important;
+  }
+
+  /* Compare mode: stack panels */
+  .resp-compare-panels {
+    flex-direction: column !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+  }
+  .resp-compare-panels > * {
+    width: 100% !important;
+    min-height: 400px;
+  }
+
+  /* Graph SVG: full width, auto height */
+  .resp-graph-svg {
+    width: 100% !important;
+    height: auto !important;
+    min-height: 260px;
+    overflow: visible !important;
+  }
+}
+
+/* ════════════════════════════════════════
+   MOBILE FIXES — max-width: 768px ONLY
+   Desktop layout is NOT affected
+   ════════════════════════════════════════ */
+@media (max-width: 768px) {
+
+  /* 1. Enable scroll, disable fixed height */
+  html, body, #root {
+    height: auto !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+  }
+  .page-wrapper {
+    height: auto !important;
+    min-height: 100vh;
+    overflow: visible !important;
+  }
+
+  /* 2. Controls container: stack vertically */
+  .controls-container {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 16px !important;
+  }
+
+  /* 3. Slider groups: label above, full-width slider */
+  .slider-group {
+    display: flex !important;
+    flex-direction: column !important;
+    width: 100% !important;
+    gap: 0 !important;
+  }
+  .slider-group label {
+    margin-bottom: 6px !important;
+    font-size: 14px !important;
+  }
+  .slider-group input[type="range"] {
+    width: 100% !important;
+  }
+
+  /* 4. Visualizer container: visible, min-height */
+  .resp-bars-container,
+  .resp-graph-svg {
+    width: 100% !important;
+    min-height: 250px !important;
+    overflow: visible !important;
+    height: auto !important;
+  }
+
+  /* 5. Compare mode: stack panels */
+  .resp-compare-panels {
+    flex-direction: column !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    height: auto !important;
+  }
+  .resp-compare-panels > * {
+    width: 100% !important;
+    min-height: 400px;
+  }
+  .resp-compare-panels input,
+  .resp-compare-panels button {
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  /* 6. Graph page body: stack vertically, scrollable */
+  .resp-body {
+    flex-direction: column !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    height: auto !important;
+    padding: 8px 10px !important;
+    gap: 10px !important;
+  }
+  .resp-left-panel {
+    width: 100% !important;
+    overflow-y: visible !important;
+  }
+  .resp-viz-col {
+    min-height: 300px !important;
+    overflow: visible !important;
+  }
+
+  /* 7. Normal mode three-column → single column */
+  .resp-normal-layout {
+    flex-direction: column !important;
+    overflow-y: auto !important;
+    height: auto !important;
+  }
+  .resp-normal-layout > * {
+    width: 100% !important;
+  }
+
+  /* 8. Buttons: wrap cleanly */
+  .resp-btn-group {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 8px !important;
+  }
+  .resp-btn-group button {
+    flex: 1 !important;
+    min-width: 70px !important;
+  }
+
+  /* 9. Nav: allow wrap on very small screens */
+  .resp-nav {
+    flex-wrap: wrap !important;
+    padding: 6px 10px !important;
+  }
+}
+
+/* ════════════════════════════════════════
+   MOBILE REORDER — max-width: 768px ONLY
+   Uses CSS order to reorder sections.
+   Desktop layout is NOT affected.
+   ════════════════════════════════════════ */
+@media (max-width: 768px) {
+
+  /* Make the controls bar and three-column layout
+     part of a single flex column so order works */
+  .resp-normal-layout {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 10px !important;
+    overflow-y: auto !important;
+    height: auto !important;
+  }
+
+  /* Controls bar: split buttons and sliders visually via order */
+  .controls-bar {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 10px !important;
+  }
+
+  /* Buttons: order 1 — top */
+  .controls-buttons {
+    order: 1 !important;
+    width: 100% !important;
+  }
+
+  /* Sliders: order 3 — below visualizer */
+  .sliders {
+    order: 3 !important;
+    width: 100% !important;
+  }
+
+  /* Center panel (legend + bars): order 2 */
+  .center-panel {
+    order: 2 !important;
+    width: 100% !important;
+    min-height: 280px !important;
+  }
+
+  /* Visualizer bars: visible, no fixed height */
+  .visualizer-container {
+    width: 100% !important;
+    min-height: 250px !important;
+    overflow: visible !important;
+    height: auto !important;
+  }
+
+  /* Legend: inside center-panel, stays above bars naturally */
+  .legend {
+    order: 0 !important;
+  }
+
+  /* Right panel (stats): order 4 */
+  .right-panel {
+    order: 4 !important;
+    width: 100% !important;
+    max-height: none !important;
+  }
+
+  /* Stats cards */
+  .stats {
+    order: 4 !important;
+  }
+
+  /* Left panel (custom array + complexity): order 5+ */
+  .left-panel {
+    order: 5 !important;
+    width: 100% !important;
+    max-height: none !important;
+  }
+
+  /* Custom array: order 5 */
+  .custom-array {
+    order: 5 !important;
+  }
+
+  /* Complexity: order 6 */
+  .complexity {
+    order: 6 !important;
+  }
 }

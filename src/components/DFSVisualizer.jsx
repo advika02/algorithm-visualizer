@@ -1,25 +1,30 @@
-import { useState, useRef } from "react";
-import { DEFAULT_GRAPH, dfsAnimations } from "../algorithms/dfs";
+import { useState, useRef, useEffect } from "react";
+import { dfsAnimations } from "../algorithms/dfs";
 
 const NODE_RADIUS = 24;
 
 function nodeColor(state) {
   switch (state) {
-    case "visiting":  return "#f97316"; // orange — currently on stack
-    case "active":    return "#a855f7"; // purple — being explored right now
-    case "visited":   return "#22c55e"; // green — fully done
-    default:          return "#94a3b8"; // grey — unvisited
+    case "visiting": return "#f97316";
+    case "active":   return "#a855f7";
+    case "visited":  return "#22c55e";
+    default:         return "#64748b";
   }
 }
 
-export function DFSVisualizer({ speedRef }) {
-  const graph = DEFAULT_GRAPH;
+function edgeKey(a, b) { return [a, b].sort().join("-"); }
+
+const CARD = { backgroundColor: "#ffffff", borderRadius: "12px", boxShadow: "0 6px 20px rgba(0,0,0,0.2)", padding: "12px 14px" };
+const LABEL = { margin: "0 0 6px", fontSize: "10px", textTransform: "uppercase", letterSpacing: "1px", color: "#6b7280" };
+
+export function DFSVisualizer({ speedRef, graph, startNode: startNodeProp, onGenerate }) {
   const nodeIds = Object.keys(graph.nodes);
 
-  const [startNode, setStartNode] = useState("A");
+  const [startNode, setStartNode] = useState(startNodeProp ?? nodeIds[0] ?? "A");
   const [nodeStates, setNodeStates] = useState({});
   const [activeEdges, setActiveEdges] = useState(new Set());
-  const [stackDisplay, setStackDisplay] = useState([]); // call-stack depth trace
+  const [stackDisplay, setStackDisplay] = useState([]);
+  const [traversalOrder, setTraversalOrder] = useState([]);
   const [explanation, setExplanation] = useState("Select a start node and press Run DFS.");
   const [status, setStatus] = useState("idle");
 
@@ -27,10 +32,15 @@ export function DFSVisualizer({ speedRef }) {
   const indexRef = useRef(0);
   const isPausedRef = useRef(false);
   const timeoutRef = useRef(null);
-  // track call stack for display
   const callStackRef = useRef([]);
 
-  function reset() {
+  useEffect(() => {
+    doReset();
+    setStartNode(startNodeProp ?? Object.keys(graph.nodes)[0] ?? "A");
+    setExplanation("Graph loaded. Press ▶ Run DFS.");
+  }, [graph]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  function doReset() {
     clearTimeout(timeoutRef.current);
     isPausedRef.current = false;
     animsRef.current = [];
@@ -39,31 +49,29 @@ export function DFSVisualizer({ speedRef }) {
     setNodeStates({});
     setActiveEdges(new Set());
     setStackDisplay([]);
-    setExplanation("Select a start node and press Run DFS.");
+    setTraversalOrder([]);
     setStatus("idle");
   }
 
+  function reset() { doReset(); setExplanation("Select a start node and press Run DFS."); }
+
   function run() {
-    reset();
+    clearTimeout(timeoutRef.current);
+    isPausedRef.current = false;
     const anims = dfsAnimations(graph, startNode);
     animsRef.current = anims;
     indexRef.current = 0;
-    isPausedRef.current = false;
+    callStackRef.current = [];
+    setNodeStates({});
+    setActiveEdges(new Set());
+    setStackDisplay([]);
+    setTraversalOrder([]);
     setStatus("running");
     setTimeout(() => step(), 0);
   }
 
-  function pause() {
-    isPausedRef.current = true;
-    clearTimeout(timeoutRef.current);
-    setStatus("paused");
-  }
-
-  function resume() {
-    isPausedRef.current = false;
-    setStatus("running");
-    step();
-  }
+  function pause() { isPausedRef.current = true; clearTimeout(timeoutRef.current); setStatus("paused"); }
+  function resume() { isPausedRef.current = false; setStatus("running"); step(); }
 
   function stepOnce() {
     if (status === "running") return;
@@ -78,48 +86,33 @@ export function DFSVisualizer({ speedRef }) {
     if (isPausedRef.current) return;
     const idx = indexRef.current;
     const anims = animsRef.current;
-
     if (idx >= anims.length) { setStatus("done"); return; }
-
     const anim = anims[idx];
     indexRef.current = idx + 1;
     applyAnimation(anim);
-
-    if (anim.type !== "done") {
-      timeoutRef.current = setTimeout(() => step(), speedRef.current);
-    } else {
-      setStatus("done");
-    }
+    if (anim.type !== "done") { timeoutRef.current = setTimeout(() => step(), speedRef.current); }
+    else { setStatus("done"); }
   }
 
   function applyAnimation(anim) {
     setExplanation(anim.explanation || "");
-
     if (anim.type === "start") {
       setNodeStates({ [anim.node]: "visiting" });
-
     } else if (anim.type === "push") {
       callStackRef.current = [...callStackRef.current, anim.node];
       setStackDisplay([...callStackRef.current]);
       setNodeStates(prev => ({ ...prev, [anim.node]: "visiting" }));
-
     } else if (anim.type === "visit") {
       setNodeStates(prev => ({ ...prev, [anim.node]: "active" }));
-
     } else if (anim.type === "neighbors") {
       setActiveEdges(new Set(anim.neighbors.map(n => edgeKey(anim.node, n))));
-
     } else if (anim.type === "explore") {
       setActiveEdges(new Set([edgeKey(anim.from, anim.to)]));
-
     } else if (anim.type === "pop") {
       callStackRef.current = callStackRef.current.filter((_, i) => i !== callStackRef.current.lastIndexOf(anim.node));
       setStackDisplay([...callStackRef.current]);
       setNodeStates(prev => ({ ...prev, [anim.node]: "visited" }));
-
-    } else if (anim.type === "skip") {
-      // no visual change needed
-
+      setTraversalOrder(prev => [...prev, anim.node]);
     } else if (anim.type === "done") {
       setActiveEdges(new Set());
       callStackRef.current = [];
@@ -127,103 +120,88 @@ export function DFSVisualizer({ speedRef }) {
     }
   }
 
-  function edgeKey(a, b) { return [a, b].sort().join("-"); }
+  const statusColors = {
+    done:    { bg: "#dcfce7", color: "#16a34a" },
+    running: { bg: "#dbeafe", color: "#1d4ed8" },
+    paused:  { bg: "#fef9c3", color: "#a16207" },
+    idle:    { bg: "rgba(255,255,255,0.1)", color: "#9ca3af" },
+  };
+  const sc = statusColors[status] || statusColors.idle;
 
   const W = 520, H = 460;
 
   return (
-    <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "10px", minHeight: 0, overflow: "hidden" }}>
+    <div className="graph-mobile-layout" style={{ flex: 1, display: "flex", flexDirection: "column", gap: "10px", minHeight: 0, overflow: "hidden" }}>
 
       {/* Controls */}
-      <div style={{
-        display: "flex", alignItems: "center", gap: "10px", flexShrink: 0,
-        backgroundColor: "#ffffff", borderRadius: "10px", border: "1px solid #e2e8f0",
-        padding: "10px 16px", boxShadow: "0 2px 8px rgba(0,0,0,0.05)", flexWrap: "wrap"
-      }}>
-        <label style={{ fontSize: "11px", textTransform: "uppercase", letterSpacing: "1px", color: "#64748b" }}>Start Node</label>
-        <select value={startNode} onChange={e => setStartNode(e.target.value)}
-          disabled={status === "running"}
-          style={{ padding: "5px 10px", fontSize: "13px", borderRadius: "7px", border: "1.5px solid #e2e8f0", backgroundColor: "#f8fafc", color: "#1e293b", fontWeight: "600", cursor: "pointer" }}>
+      <div className="controls-buttons" style={{ display: "flex", alignItems: "center", gap: "8px", flexShrink: 0, backgroundColor: "#ffffff", borderRadius: "10px", padding: "10px 14px", boxShadow: "0 4px 16px rgba(0,0,0,0.2)", flexWrap: "wrap" }}>
+        <label style={{ fontSize: "11px", textTransform: "uppercase", letterSpacing: "1px", color: "#6b7280" }}>Start Node</label>
+        <select value={startNode} onChange={e => setStartNode(e.target.value)} disabled={status === "running"}
+          style={{ padding: "4px 8px", fontSize: "13px", borderRadius: "7px", border: "1.5px solid #e2e8f0", backgroundColor: "#fff", color: "#0B1F4A", fontWeight: "600", cursor: "pointer" }}>
           {nodeIds.map(n => <option key={n} value={n}>{n}</option>)}
         </select>
 
-        {status !== "running" ? (
-          <button onClick={status === "paused" ? resume : run} style={{
-            padding: "6px 16px", fontSize: "13px", borderRadius: "7px", border: "none",
-            backgroundColor: "#43a047", color: "#fff", fontWeight: "700", cursor: "pointer"
-          }}>{status === "paused" ? "▶ Resume" : "▶ Run DFS"}</button>
-        ) : (
-          <button onClick={pause} style={{
-            padding: "6px 16px", fontSize: "13px", borderRadius: "7px", border: "none",
-            backgroundColor: "#e53935", color: "#fff", fontWeight: "700", cursor: "pointer"
-          }}>⏸ Pause</button>
-        )}
+        {status !== "running"
+          ? <button onClick={status === "paused" ? resume : run}
+              style={{ padding: "5px 13px", fontSize: "12px", borderRadius: "8px", border: "none", backgroundColor: "#3b82f6", color: "#fff", fontWeight: "600", cursor: "pointer", transition: "background-color 0.2s ease" }}
+              onMouseEnter={e => { e.currentTarget.style.backgroundColor = "#2563eb"; }}
+              onMouseLeave={e => { e.currentTarget.style.backgroundColor = "#3b82f6"; }}>
+              {status === "paused" ? "▶ Resume" : "▶ Run DFS"}
+            </button>
+          : <button onClick={pause}
+              style={{ padding: "5px 13px", fontSize: "12px", borderRadius: "8px", border: "none", backgroundColor: "#ef4444", color: "#fff", fontWeight: "600", cursor: "pointer", transition: "background-color 0.2s ease" }}
+              onMouseEnter={e => { e.currentTarget.style.backgroundColor = "#dc2626"; }}
+              onMouseLeave={e => { e.currentTarget.style.backgroundColor = "#ef4444"; }}>
+              ⏸ Pause
+            </button>
+        }
 
-        <button onClick={stepOnce} disabled={status === "running" || status === "done"} style={{
-          padding: "6px 14px", fontSize: "13px", borderRadius: "7px", border: "none",
-          backgroundColor: "#1e88e5", color: "#fff", fontWeight: "700",
-          cursor: status === "running" || status === "done" ? "not-allowed" : "pointer",
-          opacity: status === "running" || status === "done" ? 0.45 : 1
-        }}>⏭ Step</button>
+        <button onClick={stepOnce} disabled={status === "running" || status === "done"}
+          style={{ padding: "5px 13px", fontSize: "12px", borderRadius: "8px", border: "none", backgroundColor: "#3b82f6", color: "#fff", fontWeight: "600", cursor: status === "running" || status === "done" ? "not-allowed" : "pointer", opacity: status === "running" || status === "done" ? 0.4 : 1, transition: "background-color 0.2s ease" }}
+          onMouseEnter={e => { if (status !== "running" && status !== "done") e.currentTarget.style.backgroundColor = "#2563eb"; }}
+          onMouseLeave={e => { e.currentTarget.style.backgroundColor = "#3b82f6"; }}>
+          ⏭ Step
+        </button>
 
-        <button onClick={reset} style={{
-          padding: "6px 14px", fontSize: "13px", borderRadius: "7px", border: "none",
-          backgroundColor: "#fb8c00", color: "#fff", fontWeight: "700", cursor: "pointer"
-        }}>↺ Reset</button>
+        <button onClick={reset}
+          style={{ padding: "5px 13px", fontSize: "12px", borderRadius: "8px", border: "none", backgroundColor: "#f59e0b", color: "#fff", fontWeight: "600", cursor: "pointer", transition: "background-color 0.2s ease" }}
+          onMouseEnter={e => { e.currentTarget.style.backgroundColor = "#d97706"; }}
+          onMouseLeave={e => { e.currentTarget.style.backgroundColor = "#f59e0b"; }}>
+          ↺ Reset
+        </button>
 
-        <span style={{
-          marginLeft: "auto", fontSize: "11px", padding: "3px 10px", borderRadius: "20px", fontWeight: "600",
-          backgroundColor: status === "done" ? "#dcfce7" : status === "running" ? "#dbeafe" : status === "paused" ? "#fef9c3" : "#f1f5f9",
-          color: status === "done" ? "#16a34a" : status === "running" ? "#1d4ed8" : status === "paused" ? "#a16207" : "#64748b"
-        }}>
-          {status === "done" ? "Done" : status === "running" ? "Running" : status === "paused" ? "Paused" : "Idle"}
+        <button onClick={onGenerate}
+          style={{ padding: "5px 13px", fontSize: "12px", borderRadius: "8px", border: "1.5px solid #3b82f6", backgroundColor: "transparent", color: "#3b82f6", fontWeight: "600", cursor: "pointer", transition: "all 0.2s ease" }}
+          onMouseEnter={e => { e.currentTarget.style.backgroundColor = "rgba(59,130,246,0.1)"; }}
+          onMouseLeave={e => { e.currentTarget.style.backgroundColor = "transparent"; }}>
+          ⟳ New Graph
+        </button>
+
+        <span style={{ marginLeft: "auto", fontSize: "11px", padding: "2px 10px", borderRadius: "20px", fontWeight: "600", backgroundColor: sc.bg, color: sc.color }}>
+          {status.charAt(0).toUpperCase() + status.slice(1)}
         </span>
       </div>
 
       {/* Main area */}
-      <div style={{ flex: 1, display: "flex", gap: "12px", minHeight: 0, overflow: "hidden" }}>
+      <div className="top-visualizer-section" style={{ flex: 1, display: "flex", gap: "12px", minHeight: 0, overflow: "hidden" }}>
 
         {/* Graph SVG */}
-        <div style={{
-          flex: 1, backgroundColor: "#ffffff", borderRadius: "12px",
-          border: "1px solid #e2e8f0", boxShadow: "0 10px 25px rgba(0,0,0,0.08)",
-          display: "flex", alignItems: "center", justifyContent: "center",
-          overflow: "hidden", minHeight: 0
-        }}>
+        <div className="resp-graph-svg" style={{ flex: 1, backgroundColor: "#ffffff", borderRadius: "12px", boxShadow: "0 8px 30px rgba(0,0,0,0.3)", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden", minHeight: 0 }}>
           <svg viewBox={`0 0 ${W} ${H}`} style={{ width: "100%", height: "100%", maxHeight: "100%" }}>
-            {/* Edges */}
             {graph.edges.map(([u, v]) => {
               const nu = graph.nodes[u], nv = graph.nodes[v];
+              if (!nu || !nv) return null;
               const key = edgeKey(u, v);
               const active = activeEdges.has(key);
-              return (
-                <line key={key}
-                  x1={nu.x} y1={nu.y} x2={nv.x} y2={nv.y}
-                  stroke={active ? "#a855f7" : "#cbd5e1"}
-                  strokeWidth={active ? 3 : 2}
-                  strokeLinecap="round"
-                  style={{ transition: "stroke 0.3s ease, stroke-width 0.3s ease" }}
-                />
-              );
+              return <line key={key} x1={nu.x} y1={nu.y} x2={nv.x} y2={nv.y} className="graph-edge" stroke={active ? "#a855f7" : "#cbd5e1"} strokeWidth={active ? 3 : 2} strokeLinecap="round" />;
             })}
-
-            {/* Nodes */}
             {nodeIds.map(id => {
               const { x, y } = graph.nodes[id];
               const state = nodeStates[id] || "unvisited";
-              const color = nodeColor(state);
               return (
                 <g key={id}>
-                  <circle cx={x} cy={y} r={NODE_RADIUS}
-                    fill={color}
-                    stroke={state === "active" ? "#9333ea" : "#fff"}
-                    strokeWidth={state === "active" ? 3 : 2}
-                    style={{ transition: "fill 0.35s ease, stroke 0.35s ease" }}
-                  />
-                  <text x={x} y={y} textAnchor="middle" dominantBaseline="central"
-                    fontSize="15" fontWeight="700" fill="#fff"
-                    style={{ userSelect: "none", pointerEvents: "none" }}
-                  >{id}</text>
+                  <circle cx={x} cy={y} r={NODE_RADIUS} className="graph-node" fill={nodeColor(state)} stroke={state === "active" ? "#9333ea" : "#fff"} strokeWidth={state === "active" ? 3 : 2} />
+                  <text x={x} y={y} textAnchor="middle" dominantBaseline="central" fontSize="15" fontWeight="700" fill="#fff" style={{ userSelect: "none", pointerEvents: "none" }}>{id}</text>
                 </g>
               );
             })}
@@ -231,73 +209,53 @@ export function DFSVisualizer({ speedRef }) {
         </div>
 
         {/* Right info column */}
-        <div style={{ width: "200px", flexShrink: 0, display: "flex", flexDirection: "column", gap: "10px", overflowY: "auto" }}>
+        <div className="side-panel" style={{ width: "200px", flexShrink: 0, display: "flex", flexDirection: "column", gap: "10px", overflowY: "auto", maxHeight: "100%" }}>
 
-          {/* Step explanation */}
-          <div style={{
-            backgroundColor: explanation ? "rgba(168,85,247,0.06)" : "#ffffff",
-            borderRadius: "12px", border: "1px solid #e2e8f0",
-            padding: "12px 14px", boxShadow: "0 4px 12px rgba(0,0,0,0.06)", transition: "all 0.3s ease"
-          }}>
-            <p style={{ margin: "0 0 6px", fontSize: "10px", textTransform: "uppercase", letterSpacing: "1px", color: "#64748b" }}>Step Explanation</p>
-            <p style={{ margin: 0, fontSize: "12px", color: "#1e293b", lineHeight: "1.6", minHeight: "36px" }}>{explanation}</p>
+          <div style={CARD}>
+            <p style={LABEL}>Step Explanation</p>
+            <p style={{ margin: 0, fontSize: "12px", fontWeight: "600", color: "#0B1F4A", lineHeight: "1.65", minHeight: "36px" }}>{explanation}</p>
           </div>
 
-          {/* Call Stack */}
-          <div style={{
-            backgroundColor: "#faf5ff", borderRadius: "12px",
-            border: "1px solid #e9d5ff", padding: "12px 14px",
-            boxShadow: "0 4px 12px rgba(0,0,0,0.06)"
-          }}>
-            <p style={{ margin: "0 0 8px", fontSize: "10px", textTransform: "uppercase", letterSpacing: "1px", color: "#64748b" }}>Call Stack</p>
+          <div style={CARD}>
+            <p style={LABEL}>Call Stack</p>
             <div style={{ display: "flex", flexDirection: "column-reverse", gap: "4px", minHeight: "28px" }}>
               {stackDisplay.length === 0
-                ? <span style={{ fontSize: "12px", color: "#94a3b8" }}>empty</span>
+                ? <span style={{ fontSize: "12px", color: "#9ca3af" }}>empty</span>
                 : stackDisplay.map((n, i) => (
-                  <span key={i} style={{
-                    padding: "3px 10px", borderRadius: "6px", fontSize: "12px",
-                    fontWeight: "700", backgroundColor: i === stackDisplay.length - 1 ? "#a855f7" : "#e9d5ff",
-                    color: i === stackDisplay.length - 1 ? "#fff" : "#7e22ce",
-                    textAlign: "center"
-                  }}>{n}</span>
+                  <span key={i} style={{ padding: "3px 10px", borderRadius: "6px", fontSize: "12px", fontWeight: "700", backgroundColor: i === stackDisplay.length - 1 ? "#a855f7" : "#f3e8ff", color: i === stackDisplay.length - 1 ? "#fff" : "#7e22ce", textAlign: "center", transition: "background-color 0.2s ease" }}>{n}</span>
                 ))
               }
             </div>
           </div>
 
-          {/* Legend */}
-          <div style={{
-            backgroundColor: "#ffffff", borderRadius: "12px",
-            border: "1px solid #e2e8f0", padding: "12px 14px",
-            boxShadow: "0 4px 12px rgba(0,0,0,0.06)", fontSize: "12px", color: "#1e293b"
-          }}>
-            <p style={{ margin: "0 0 8px", fontSize: "10px", textTransform: "uppercase", letterSpacing: "1px", color: "#64748b" }}>Legend</p>
+          <div style={{ ...CARD, maxHeight: "160px", overflowY: "auto" }}>
+            <p style={LABEL}>Traversal Order</p>
+            {traversalOrder.length === 0
+              ? <span style={{ fontSize: "12px", color: "#9ca3af" }}>—</span>
+              : <div style={{ display: "flex", flexWrap: "wrap", gap: "4px", alignItems: "center" }}>
+                  {traversalOrder.map((n, i) => (
+                    <span key={i} style={{ display: "flex", alignItems: "center", gap: "3px" }}>
+                      <span style={{ padding: "2px 9px", borderRadius: "20px", fontSize: "12px", fontWeight: "700", backgroundColor: i === traversalOrder.length - 1 ? "#22c55e" : "#dcfce7", color: i === traversalOrder.length - 1 ? "#fff" : "#15803d", transition: "background-color 0.2s ease" }}>{n}</span>
+                      {i < traversalOrder.length - 1 && <span style={{ fontSize: "10px", color: "#9ca3af" }}>→</span>}
+                    </span>
+                  ))}
+                </div>
+            }
+          </div>
+
+          <div style={{ ...CARD, fontSize: "12px", color: "#0B1F4A" }}>
+            <p style={LABEL}>Legend</p>
             {[
-              { color: "#94a3b8", label: "Unvisited"   },
-              { color: "#f97316", label: "On Stack"    },
-              { color: "#a855f7", label: "Exploring"   },
-              { color: "#22c55e", label: "Visited"     },
+              { color: "#64748b", label: "Unvisited"  },
+              { color: "#f97316", label: "On Stack"   },
+              { color: "#a855f7", label: "Exploring"  },
+              { color: "#22c55e", label: "Visited"    },
             ].map(({ color, label }) => (
               <div key={label} style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "5px" }}>
-                <span style={{ width: "14px", height: "14px", borderRadius: "50%", backgroundColor: color, flexShrink: 0 }} />
+                <span style={{ width: "12px", height: "12px", borderRadius: "50%", backgroundColor: color, flexShrink: 0 }} />
                 {label}
               </div>
             ))}
-          </div>
-
-          {/* Complexity */}
-          <div style={{
-            backgroundColor: "#f1f5f9", borderRadius: "12px",
-            border: "1px solid #e2e8f0", padding: "12px 14px",
-            boxShadow: "0 4px 12px rgba(0,0,0,0.06)", fontSize: "13px", color: "#1e293b"
-          }}>
-            <p style={{ margin: "0 0 6px", fontSize: "10px", textTransform: "uppercase", letterSpacing: "1px", color: "#64748b" }}>Complexity</p>
-            <span style={{ fontWeight: "700", fontSize: "14px", color: "#7e22ce", display: "block", marginBottom: "6px" }}>DFS</span>
-            <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-              <span>⏱ Time: <strong>O(V + E)</strong></span>
-              <span>💾 Space: <strong>O(V)</strong></span>
-              <span style={{ fontSize: "11px", color: "#64748b", marginTop: "4px" }}>Goes deep before backtracking</span>
-            </div>
           </div>
 
         </div>

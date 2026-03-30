@@ -22,8 +22,8 @@ function ArrayVisualizer({ initialAlgorithm, onHome }) {
   const { isMobile, isTablet } = useResponsive();
   const [array, setArray] = useState(() => makeArray(5));
   const [arraySize, setArraySize] = useState(5);
-  const [speed, setSpeed] = useState(1200);
-  const speedRef = useRef(1200);
+  const [speed, setSpeed] = useState(50);
+  const speedRef = useRef(1200 - (50 / 100) * (1200 - 100));
   const isPausedRef = useRef(false);
   // selectedAlgorithm is initialised from the route so Start works immediately
   const [selectedAlgorithm, setSelectedAlgorithm] = useState(initialAlgorithm ?? null);
@@ -340,7 +340,7 @@ function ArrayVisualizer({ initialAlgorithm, onHome }) {
 
   // ── controls ─────────────────────────────────────────────────────────────
 
-  function handleSpeedChange(e) { const v = Number(e.target.value); setSpeed(v); speedRef.current = v; }
+  function handleSpeedChange(e) { const v = Number(e.target.value); setSpeed(v); speedRef.current = 1200 - (v / 100) * (1200 - 100); }
   function handleArraySizeChange(e) {
     const s = Number(e.target.value);
     setArraySize(s);
@@ -401,10 +401,10 @@ function ArrayVisualizer({ initialAlgorithm, onHome }) {
   const LABEL = { margin: "0 0 8px", fontSize: "10px", textTransform: "uppercase", letterSpacing: "1px", color: "#6b7280" };
 
   return (
-    <div style={{
-      height: "100%", background: "linear-gradient(to bottom, #0B1F4A, #0f2a66)",
+    <div className="page-wrapper" style={{
+      background: "linear-gradient(to bottom, #0B1F4A, #0f2a66)",
       fontFamily: "'Segoe UI', system-ui, sans-serif", color: "#d1d5db",
-      boxSizing: "border-box", display: "flex", flexDirection: "column", overflow: "hidden"
+      boxSizing: "border-box",
     }}>
 
       {/* ── Unified top nav bar ── */}
@@ -459,10 +459,9 @@ function ArrayVisualizer({ initialAlgorithm, onHome }) {
               onMouseLeave={e => { e.currentTarget.style.backgroundColor = "#3b82f6"; }}
             >▶ Start Comparison</button>
 
-            <div style={{ display: "flex", alignItems: "center", gap: "8px", flex: 1, minWidth: "160px" }}>
+            <div className="slider-group" style={{ display: "flex", alignItems: "center", gap: "8px", flex: 1, minWidth: "160px" }}>
               <label style={{ ...LABEL, margin: 0, whiteSpace: "nowrap" }}>Speed</label>
-              <input type="range" min="500" max="4000" step="100" value={speed} onChange={handleSpeedChange} style={{ flex: 1, accentColor: "#3b82f6" }} />
-              <span style={{ fontSize: "11px", color: "#60a5fa", whiteSpace: "nowrap" }}>{speed <= 1500 ? "Fast" : speed <= 2800 ? "Medium" : "Slow"}</span>
+              <input type="range" min="1" max="100" step="1" value={speed} onChange={handleSpeedChange} style={{ flex: 1, accentColor: "#3b82f6" }} />
             </div>
 
             <div style={{ display: "flex", alignItems: "center", gap: "8px", flex: 2, minWidth: "220px" }}>
@@ -484,7 +483,7 @@ function ArrayVisualizer({ initialAlgorithm, onHome }) {
           </div>
 
           {/* Two panels */}
-          <div style={{ display: "flex", flexDirection: isMobile ? "column" : "row", gap: isMobile ? "12px" : "24px", flex: 1, minHeight: 0, overflow: "hidden" }}>
+          <div className="resp-compare-panels" style={{ display: "flex", flexDirection: isMobile ? "column" : "row", gap: isMobile ? "12px" : "24px", flex: 1, minHeight: 0, overflow: "hidden" }}>
             <ComparisonPanel sharedArray={array} speedRef={speedRef} panelId="left" triggerRef={leftTriggerRef} />
             <ComparisonPanel sharedArray={array} speedRef={speedRef} panelId="right" triggerRef={rightTriggerRef} />
           </div>
@@ -495,8 +494,8 @@ function ArrayVisualizer({ initialAlgorithm, onHome }) {
       {viewMode === "normal" && (
         <div style={{ display: "flex", flexDirection: "column", gap: "10px", flex: 1, minHeight: 0, overflow: "hidden" }}>
           {/* Controls bar */}
-          <div style={{ ...CARD, display: "flex", flexWrap: "wrap", gap: "10px", alignItems: "center" }}>
-            <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
+          <div className="controls-bar" style={{ ...CARD, display: "flex", flexWrap: "wrap", gap: "10px", alignItems: "center" }}>
+            <div className="resp-btn-group controls-buttons" style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
               <button onClick={startPauseAnimation}
                 style={{ padding: "7px 16px", fontSize: "12px", cursor: "pointer", borderRadius: "8px", border: "none", backgroundColor: isRunning && !isPaused ? "#ef4444" : "#3b82f6", color: "#fff", fontWeight: "600", transition: "background-color 0.2s ease" }}
                 onMouseEnter={e => { e.currentTarget.style.backgroundColor = isRunning && !isPaused ? "#dc2626" : "#2563eb"; }}
@@ -522,19 +521,18 @@ function ArrayVisualizer({ initialAlgorithm, onHome }) {
                 ⟳ New Array
               </button>
             </div>
-            <div style={{ display: "flex", alignItems: "center", gap: "8px", flex: 1, minWidth: "140px" }}>
+            <div className="slider-group sliders" style={{ display: "flex", alignItems: "center", gap: "8px", flex: 1, minWidth: "140px" }}>
               <label style={{ ...LABEL, margin: 0, whiteSpace: "nowrap" }}>Speed</label>
-              <input type="range" min="500" max="4000" step="100" value={speed} onChange={handleSpeedChange} style={{ flex: 1, accentColor: "#3b82f6" }} />
-              <span style={{ fontSize: "11px", color: "#60a5fa", whiteSpace: "nowrap" }}>{speed <= 1500 ? "Fast" : speed <= 2800 ? "Medium" : "Slow"}</span>
+              <input type="range" min="1" max="100" step="1" value={speed} onChange={handleSpeedChange} style={{ flex: 1, accentColor: "#3b82f6" }} />
             </div>
-            <div style={{ display: "flex", alignItems: "center", gap: "8px", flex: 1, minWidth: "120px" }}>
+            <div className="slider-group sliders" style={{ display: "flex", alignItems: "center", gap: "8px", flex: 1, minWidth: "120px" }}>
               <label style={{ ...LABEL, margin: 0, whiteSpace: "nowrap" }}>Size — <span style={{ color: "#60a5fa" }}>{arraySize}</span></label>
               <input type="range" min="5" max="40" step="1" value={arraySize} onChange={handleArraySizeChange} style={{ flex: 1, accentColor: "#3b82f6" }} />
             </div>
           </div>
 
           {/* Three-column layout */}
-          <div style={{
+          <div className="resp-normal-layout" style={{
             display: "flex",
             flexDirection: isMobile ? "column" : "row",
             gap: isMobile ? "8px" : "14px",
@@ -543,10 +541,10 @@ function ArrayVisualizer({ initialAlgorithm, onHome }) {
           }}>
 
             {/* LEFT: Static content — Custom Array + Complexity */}
-            <div className="side-panel" style={{ width: isMobile ? "100%" : isTablet ? "180px" : "210px", flexShrink: 0, display: "flex", flexDirection: "column", gap: "12px", overflowY: "auto", maxHeight: "100%" }}>
+            <div className="side-panel left-panel" style={{ width: isMobile ? "100%" : isTablet ? "180px" : "210px", flexShrink: 0, display: "flex", flexDirection: "column", gap: "12px", overflowY: "auto", maxHeight: "100%" }}>
 
               {/* Custom Array */}
-              <div style={CARD}>
+              <div className="custom-array" style={CARD}>
                 <p style={LABEL}>Custom Array</p>
                 <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
                   <input type="text" placeholder="e.g. 5,1,9,3,7" value={customInput}
@@ -593,7 +591,7 @@ function ArrayVisualizer({ initialAlgorithm, onHome }) {
                 const c = algorithmComplexities[selectedAlgorithm];
                 if (!c) return null;
                 return (
-                  <div style={CARD}>
+                  <div className="complexity" style={CARD}>
                     <p style={LABEL}>Complexity</p>
                     <div style={{ display: "flex", flexDirection: "column", gap: "6px", fontSize: "13px", color: "#0B1F4A" }}>
                       <span style={{ fontWeight: "700", fontSize: "14px", color: "#1d4ed8" }}>{c.name}</span>
@@ -611,9 +609,9 @@ function ArrayVisualizer({ initialAlgorithm, onHome }) {
             </div>
 
             {/* CENTER: Legend + Bars */}
-            <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "8px", minWidth: 0, minHeight: 0 }}>
+            <div className="center-panel" style={{ flex: 1, display: "flex", flexDirection: "column", gap: "8px", minWidth: 0, minHeight: 0 }}>
               {/* Legend */}
-              <div style={{ ...CARD, display: "flex", flexWrap: "wrap", justifyContent: "center", gap: "14px", fontSize: "12px", color: "#0B1F4A" }}>
+              <div className="legend" style={{ ...CARD, display: "flex", flexWrap: "wrap", justifyContent: "center", gap: "14px", fontSize: "12px", color: "#0B1F4A" }}>
                 {[
                   { color: "#fbbf24", label: "Comparing" }, { color: "#ef4444", label: "Swapping" },
                   { color: "#22c55e", label: "Sorted" }, { color: "rgba(96,165,250,0.7)", label: "Active Range" },
@@ -626,7 +624,7 @@ function ArrayVisualizer({ initialAlgorithm, onHome }) {
                 ))}
               </div>
               {/* Bars */}
-              <div style={{ ...CARD, padding: "12px 12px 0", display: "flex", alignItems: "flex-end", justifyContent: "center", gap: "2px", flex: 1, minHeight: "200px", overflow: "hidden" }}>
+              <div className="resp-bars-container visualizer-container" style={{ ...CARD, padding: "12px 12px 0", display: "flex", alignItems: "flex-end", justifyContent: "center", gap: "2px", flex: 1, minHeight: "200px", overflow: "hidden" }}>
                 {(() => {
                   const MAX_H = 350;
                   const maxVal = Math.max(...array, 1);
@@ -646,10 +644,10 @@ function ArrayVisualizer({ initialAlgorithm, onHome }) {
             </div>
 
             {/* RIGHT: Dynamic content — Current Step + Step Explanation + Statistics */}
-            <div className="side-panel" style={{ width: isMobile ? "100%" : isTablet ? "180px" : "210px", flexShrink: 0, display: "flex", flexDirection: "column", gap: "12px", overflowY: "auto", maxHeight: "100%" }}>
+            <div className="side-panel right-panel" style={{ width: isMobile ? "100%" : isTablet ? "180px" : "210px", flexShrink: 0, display: "flex", flexDirection: "column", gap: "12px", overflowY: "auto", maxHeight: "100%" }}>
 
               {/* Current Step + Explanation (unified) */}
-              <div className="step-panel-active" style={{ ...CARD, transition: "background-color 0.3s ease" }}>
+              <div className="step-panel-active stats" style={{ ...CARD, transition: "background-color 0.3s ease" }}>
                 <p style={LABEL}>Current Step</p>
                 <p style={{ margin: "0 0 10px", fontSize: "13px", fontWeight: "700", color: "#0B1F4A", lineHeight: "1.5" }}>
                   {currentStep || "Press ▶ Start to begin"}
@@ -664,7 +662,7 @@ function ArrayVisualizer({ initialAlgorithm, onHome }) {
               </div>
 
               {/* Statistics */}
-              <div style={CARD}>
+              <div className="stats" style={CARD}>
                 <p style={LABEL}>Statistics</p>
                 <div style={{ display: "flex", flexDirection: "column", gap: "6px", fontSize: "13px", color: "#0B1F4A" }}>
                   <span>🔍 Comparisons: <strong>{stats.comparisons}</strong></span>

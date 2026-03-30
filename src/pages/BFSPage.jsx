@@ -6,15 +6,15 @@ import { generateRandomGraph } from "../algorithms/parseGraph";
 
 export default function BFSPage() {
   const navigate = useNavigate();
-  const [speed, setSpeed] = useState(1200);
-  const speedRef = useRef(1200);
+  const [speed, setSpeed] = useState(50);
+  const speedRef = useRef(1200 - (50 / 100) * (1200 - 100));
   const [graph, setGraph] = useState(() => generateRandomGraph());
   const [startNode, setStartNode] = useState("A");
 
   function handleSpeedChange(e) {
     const val = Number(e.target.value);
     setSpeed(val);
-    speedRef.current = val;
+    speedRef.current = 1200 - (val / 100) * (1200 - 100);
   }
 
   function handleLoadGraph(newGraph, newStart) {
@@ -30,8 +30,7 @@ export default function BFSPage() {
   }
 
   return (
-    <div style={{
-      height: "100vh", display: "flex", flexDirection: "column",
+    <div className="page-wrapper" style={{
       background: "linear-gradient(to bottom, #0B1F4A, #0f2a66)",
       fontFamily: "'Segoe UI', system-ui, sans-serif", color: "#d1d5db", boxSizing: "border-box"
     }}>
@@ -51,11 +50,7 @@ export default function BFSPage() {
         </div>
 
         <div className="resp-nav-right">
-          <label style={{ fontSize: "11px", textTransform: "uppercase", letterSpacing: "1px", color: "#9ca3af" }}>Speed</label>
-          <input type="range" min="500" max="4000" step="100" value={speed} onChange={handleSpeedChange} style={{ accentColor: "#3b82f6", width: "100px" }} />
-          <span style={{ fontSize: "11px", color: "#60a5fa", minWidth: "40px" }}>
-            {speed <= 1500 ? "Fast" : speed <= 2800 ? "Medium" : "Slow"}
-          </span>
+          <input type="range" min="1" max="100" step="1" value={speed} onChange={handleSpeedChange} style={{ accentColor: "#3b82f6", width: "100px" }} />
         </div>
       </div>
 

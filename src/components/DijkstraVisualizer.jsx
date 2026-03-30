@@ -180,7 +180,7 @@ export function DijkstraVisualizer({ speedRef, graph, startNode: startNodeProp, 
           </div>
         )}
 
-        <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden" }}>
+        <div className="resp-graph-svg" style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden" }}>
           <svg viewBox={`0 0 ${W} ${H}`} style={{ width: "100%", height: "100%", maxHeight: "100%" }}>
             {graph.edges.map(([u, v, w]) => {
               const nu = graph.nodes[u], nv = graph.nodes[v];
