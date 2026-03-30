@@ -130,3 +130,100 @@ button:disabled {
 .step-panel-active {
   animation: stepPulse 0.6s ease-out;
 }
+
+/* ── Responsive utilities ── */
+.resp-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: nowrap;
+  padding: 8px 16px;
+  gap: 8px;
+}
+
+.resp-nav-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.resp-nav-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+/* Graph page body: side-by-side by default */
+.resp-body {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  padding: 14px 18px;
+  display: flex;
+  gap: 14px;
+}
+
+.resp-left-panel {
+  width: 220px;
+  flex-shrink: 0;
+  overflow-y: auto;
+}
+
+.resp-viz-col {
+  flex: 1;
+  min-height: 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Home page grid */
+.resp-section-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 20px;
+}
+
+/* ── Tablet (641px – 1024px) ── */
+@media (max-width: 1024px) {
+  .resp-nav { padding: 7px 12px; }
+  .resp-body { padding: 10px 12px; gap: 10px; }
+  .resp-left-panel { width: 190px; }
+  .resp-section-grid { gap: 16px; }
+}
+
+/* ── Mobile (≤ 640px) ── */
+@media (max-width: 640px) {
+  .resp-nav {
+    flex-wrap: wrap;
+    padding: 6px 10px;
+    gap: 6px;
+  }
+  .resp-nav-left { gap: 6px; }
+  .resp-nav-right { gap: 4px; }
+
+  /* Stack graph page layout vertically */
+  .resp-body {
+    flex-direction: column;
+    padding: 8px 10px;
+    gap: 8px;
+    overflow-y: auto;
+  }
+  .resp-left-panel {
+    width: 100%;
+    flex-shrink: 1;
+    overflow-y: visible;
+  }
+  .resp-viz-col { min-height: 300px; }
+
+  /* Home page */
+  .resp-section-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  /* Smaller button text */
+  button { font-size: 0.85em; }
+}

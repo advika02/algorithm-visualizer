@@ -62,7 +62,7 @@ function Section({ title, items, navigate }) {
         color: "#3b82f6",
         fontWeight: "700",
       }}>{title}</p>
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "16px" }}>
+      <div className="resp-section-grid">
         {items.map(item => <AlgoCard key={item.path} {...item} navigate={navigate} />)}
       </div>
     </div>
@@ -78,7 +78,7 @@ export default function HomePage() {
       fontFamily: "'Segoe UI', system-ui, sans-serif",
       color: "#d1d5db",
       boxSizing: "border-box",
-      padding: "0 32px 64px",
+      padding: "0 16px 64px",
     }}>
 
       {/* Header */}
@@ -100,7 +100,7 @@ export default function HomePage() {
       </div>
 
       {/* Content */}
-      <div style={{ maxWidth: "900px", margin: "0 auto", display: "flex", flexDirection: "column", gap: "48px" }}>
+      <div style={{ maxWidth: "900px", margin: "0 auto", width: "100%", display: "flex", flexDirection: "column", gap: "44px" }}>
         <Section title="Sorting Algorithms" items={SORTING} navigate={navigate} />
         <Section title="Searching" items={SEARCHING} navigate={navigate} />
         <Section title="Graph Algorithms" items={GRAPH} navigate={navigate} />

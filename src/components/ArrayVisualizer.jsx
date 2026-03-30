@@ -8,6 +8,7 @@ import { binarySearch } from "../algorithms/binarySearch";
 import { ANIMATION_TYPES } from "../algorithms/animationTypes";
 import { algorithmComplexities } from "../algorithms/algorithmComplexities";
 import { ComparisonPanel } from "./ComparisonPanel";
+import { useResponsive } from "../hooks/useResponsive";
 
 // Pure helpers — no state dependency
 function makeArray(size) {
@@ -18,6 +19,7 @@ function makeSortedArray(size) {
 }
 
 function ArrayVisualizer({ initialAlgorithm, onHome }) {
+  const { isMobile, isTablet } = useResponsive();
   const [array, setArray] = useState(() => makeArray(5));
   const [arraySize, setArraySize] = useState(5);
   const [speed, setSpeed] = useState(1200);
@@ -406,14 +408,13 @@ function ArrayVisualizer({ initialAlgorithm, onHome }) {
     }}>
 
       {/* ── Unified top nav bar ── */}
-      <div style={{
-        flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "space-between",
-        flexWrap: "nowrap", padding: "8px 16px", margin: 0,
+      <div className="resp-nav" style={{
+        flexShrink: 0, margin: 0,
         backgroundColor: "rgba(11,31,74,0.95)", borderBottom: "1px solid rgba(255,255,255,0.08)",
         position: "sticky", top: 0, zIndex: 10,
       }}>
         {/* Left: Home */}
-        <div>
+        <div className="resp-nav-left">
           {onHome && (
             <button
               onClick={onHome}
@@ -425,15 +426,17 @@ function ArrayVisualizer({ initialAlgorithm, onHome }) {
         </div>
 
         {/* Right: Mode toggle */}
-        <div style={{ display: "flex", borderRadius: "8px", overflow: "hidden", border: "1px solid rgba(255,255,255,0.1)", flexShrink: 0 }}>
-          {[{ label: "Normal Mode", val: "normal" }, { label: "⚖ Compare Mode", val: "compare" }].map(({ label, val }) => (
-            <button key={val} onClick={() => setViewMode(val)} style={{
-              padding: "5px 14px", fontSize: "12px", fontWeight: "600", cursor: "pointer", border: "none",
-              backgroundColor: viewMode === val ? "#3b82f6" : "rgba(255,255,255,0.07)",
-              color: viewMode === val ? "#fff" : "#9ca3af",
-              transition: "background-color 0.2s ease", whiteSpace: "nowrap"
-            }}>{label}</button>
-          ))}
+        <div className="resp-nav-right">
+          <div style={{ display: "flex", borderRadius: "8px", overflow: "hidden", border: "1px solid rgba(255,255,255,0.1)", flexShrink: 0 }}>
+            {[{ label: "Normal Mode", val: "normal" }, { label: "⚖ Compare", val: "compare" }].map(({ label, val }) => (
+              <button key={val} onClick={() => setViewMode(val)} style={{
+                padding: "5px 12px", fontSize: "12px", fontWeight: "600", cursor: "pointer", border: "none",
+                backgroundColor: viewMode === val ? "#3b82f6" : "rgba(255,255,255,0.07)",
+                color: viewMode === val ? "#fff" : "#9ca3af",
+                transition: "background-color 0.2s ease", whiteSpace: "nowrap"
+              }}>{label}</button>
+            ))}
+          </div>
         </div>
       </div>
 
@@ -481,7 +484,7 @@ function ArrayVisualizer({ initialAlgorithm, onHome }) {
           </div>
 
           {/* Two panels */}
-          <div style={{ display: "flex", gap: "24px", flex: 1, minHeight: 0, overflow: "hidden" }}>
+          <div style={{ display: "flex", flexDirection: isMobile ? "column" : "row", gap: isMobile ? "12px" : "24px", flex: 1, minHeight: 0, overflow: "hidden" }}>
             <ComparisonPanel sharedArray={array} speedRef={speedRef} panelId="left" triggerRef={leftTriggerRef} />
             <ComparisonPanel sharedArray={array} speedRef={speedRef} panelId="right" triggerRef={rightTriggerRef} />
           </div>
@@ -531,10 +534,16 @@ function ArrayVisualizer({ initialAlgorithm, onHome }) {
           </div>
 
           {/* Three-column layout */}
-          <div style={{ display: "flex", gap: "14px", alignItems: "stretch", flex: 1, minHeight: 0 }}>
+          <div style={{
+            display: "flex",
+            flexDirection: isMobile ? "column" : "row",
+            gap: isMobile ? "8px" : "14px",
+            alignItems: "stretch",
+            flex: 1, minHeight: 0
+          }}>
 
             {/* LEFT: Static content — Custom Array + Complexity */}
-            <div className="side-panel" style={{ width: "210px", flexShrink: 0, display: "flex", flexDirection: "column", gap: "12px", overflowY: "auto", maxHeight: "100%" }}>
+            <div className="side-panel" style={{ width: isMobile ? "100%" : isTablet ? "180px" : "210px", flexShrink: 0, display: "flex", flexDirection: "column", gap: "12px", overflowY: "auto", maxHeight: "100%" }}>
 
               {/* Custom Array */}
               <div style={CARD}>
@@ -637,7 +646,7 @@ function ArrayVisualizer({ initialAlgorithm, onHome }) {
             </div>
 
             {/* RIGHT: Dynamic content — Current Step + Step Explanation + Statistics */}
-            <div className="side-panel" style={{ width: "210px", flexShrink: 0, display: "flex", flexDirection: "column", gap: "12px", overflowY: "auto", maxHeight: "100%" }}>
+            <div className="side-panel" style={{ width: isMobile ? "100%" : isTablet ? "180px" : "210px", flexShrink: 0, display: "flex", flexDirection: "column", gap: "12px", overflowY: "auto", maxHeight: "100%" }}>
 
               {/* Current Step + Explanation (unified) */}
               <div className="step-panel-active" style={{ ...CARD, transition: "background-color 0.3s ease" }}>

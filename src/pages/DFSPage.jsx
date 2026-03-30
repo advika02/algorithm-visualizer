@@ -36,13 +36,12 @@ export default function DFSPage() {
       fontFamily: "'Segoe UI', system-ui, sans-serif", color: "#d1d5db", boxSizing: "border-box"
     }}>
       {/* Top bar */}
-      <div style={{
-        flexShrink: 0, padding: "8px 20px", margin: 0,
+      <div className="resp-nav" style={{
+        flexShrink: 0, margin: 0,
         backgroundColor: "rgba(11,31,74,0.95)", borderBottom: "1px solid rgba(255,255,255,0.08)",
-        display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "nowrap",
         position: "sticky", top: 0, zIndex: 10
       }}>
-        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+        <div className="resp-nav-left">
           <button onClick={() => navigate("/")}
             style={{ padding: "5px 14px", fontSize: "12px", fontWeight: "600", borderRadius: "8px", border: "1px solid rgba(59,130,246,0.4)", backgroundColor: "transparent", color: "#93c5fd", cursor: "pointer", transition: "all 0.2s ease", whiteSpace: "nowrap" }}
             onMouseEnter={e => { e.currentTarget.style.backgroundColor = "rgba(59,130,246,0.15)"; e.currentTarget.style.borderColor = "#3b82f6"; e.currentTarget.style.color = "#60a5fa"; }}
@@ -51,19 +50,18 @@ export default function DFSPage() {
           <h1 style={{ margin: 0, fontSize: "15px", fontWeight: "600", color: "#d1d5db", letterSpacing: "0.2px", whiteSpace: "nowrap" }}>Depth-First Search</h1>
         </div>
 
-        <div style={{ display: "flex", alignItems: "center", gap: "10px", flexShrink: 0 }}>
+        <div className="resp-nav-right">
           <label style={{ fontSize: "11px", textTransform: "uppercase", letterSpacing: "1px", color: "#9ca3af" }}>Speed</label>
-          <input type="range" min="500" max="4000" step="100" value={speed} onChange={handleSpeedChange} style={{ accentColor: "#3b82f6", width: "110px" }} />
-          <span style={{ fontSize: "11px", color: "#60a5fa", minWidth: "44px" }}>
+          <input type="range" min="500" max="4000" step="100" value={speed} onChange={handleSpeedChange} style={{ accentColor: "#3b82f6", width: "100px" }} />
+          <span style={{ fontSize: "11px", color: "#60a5fa", minWidth: "40px" }}>
             {speed <= 1500 ? "Fast" : speed <= 2800 ? "Medium" : "Slow"}
           </span>
         </div>
       </div>
 
       {/* Body */}
-      <div style={{ flex: 1, minHeight: 0, overflow: "hidden", padding: "14px 18px", display: "flex", gap: "14px" }}>
-        {/* Left panel */}
-        <div style={{ width: "220px", flexShrink: 0, overflowY: "auto" }}>
+      <div className="resp-body">
+        <div className="resp-left-panel">
           <GraphInputPanel onLoad={handleLoadGraph} accentColor="#3b82f6" />
 
           {/* Complexity */}
@@ -78,8 +76,7 @@ export default function DFSPage() {
           </div>
         </div>
 
-        {/* Visualizer */}
-        <div style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column", minWidth: 0 }}>
+        <div className="resp-viz-col">
           <DFSVisualizer speedRef={speedRef} graph={graph} startNode={startNode} onGenerate={handleGenerate} />
         </div>
       </div>
