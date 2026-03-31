@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { dijkstraAnimations } from "../algorithms/dijkstra";
+import { useGraphTouch } from "../hooks/useGraphTouch";
 
 const NODE_RADIUS = 24;
 
@@ -18,6 +19,7 @@ const LABEL = { margin: "0 0 6px", fontSize: "10px", textTransform: "uppercase",
 
 export function DijkstraVisualizer({ speedRef, graph, startNode: startNodeProp, onGenerate }) {
   const nodeIds = Object.keys(graph.nodes);
+  const { scale, position, touchHandlers } = useGraphTouch();
 
   const [startNode, setStartNode] = useState(startNodeProp ?? nodeIds[0] ?? "A");
   const [nodeStates, setNodeStates] = useState({});
@@ -123,7 +125,7 @@ export function DijkstraVisualizer({ speedRef, graph, startNode: startNodeProp, 
     <div style={{ flex: 1, display: "flex", gap: "12px", minHeight: 0, overflow: "hidden" }}>
 
       {/* Graph SVG card */}
-      <div style={{ flex: 1, backgroundColor: "#ffffff", borderRadius: "12px", boxShadow: "0 8px 30px rgba(0,0,0,0.3)", display: "flex", flexDirection: "column", overflow: "hidden", minHeight: 0 }}>
+      <div className="top-visualizer-section" style={{ flex: 1, backgroundColor: "#ffffff", borderRadius: "12px", boxShadow: "0 8px 30px rgba(0,0,0,0.3)", display: "flex", flexDirection: "column", overflow: "hidden", minHeight: 0 }}>
 
         {/* Controls */}
         <div style={{ display: "flex", alignItems: "center", gap: "8px", flexShrink: 0, padding: "10px 14px", borderBottom: "1px solid #f1f5f9", flexWrap: "wrap", backgroundColor: "#f8fafc" }}>
@@ -181,49 +183,53 @@ export function DijkstraVisualizer({ speedRef, graph, startNode: startNodeProp, 
         )}
 
         <div className="resp-graph-svg" style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden" }}>
-          <svg viewBox={`0 0 ${W} ${H}`} style={{ width: "100%", height: "100%", maxHeight: "100%" }}>
-            {graph.edges.map(([u, v, w]) => {
-              const nu = graph.nodes[u], nv = graph.nodes[v];
-              if (!nu || !nv) return null;
-              const key = edgeKey(u, v);
-              const isActive = activeEdge === key;
-              const isPath = pathEdges.has(key);
-              const stroke = isPath ? "#f59e0b" : isActive ? "#3b82f6" : "#cbd5e1";
-              const strokeW = isActive || isPath ? 3 : 2;
-              const mx = (nu.x + nv.x) / 2, my = (nu.y + nv.y) / 2;
-              return (
-                <g key={key}>
-                  <line x1={nu.x} y1={nu.y} x2={nv.x} y2={nv.y} className="graph-edge" stroke={stroke} strokeWidth={strokeW} strokeLinecap="round" />
-                  {w !== undefined && (
-                    <>
-                      <circle cx={mx} cy={my} r={11} fill="#ffffff" stroke={stroke} strokeWidth="1.5" style={{ transition: "stroke 0.25s ease" }} />
-                      <text x={mx} y={my} textAnchor="middle" dominantBaseline="central" fontSize="10" fontWeight="700" fill="#0B1F4A" style={{ userSelect: "none", pointerEvents: "none" }}>{w}</text>
-                    </>
-                  )}
-                </g>
-              );
-            })}
-            {nodeIds.map(id => {
-              const { x, y } = graph.nodes[id];
-              const state = nodeStates[id] || "unvisited";
-              const d = distances[id];
-              const distLabel = d === undefined ? "" : d === Infinity ? "∞" : String(d);
-              return (
-                <g key={id}>
-                  <circle cx={x} cy={y} r={NODE_RADIUS} className="graph-node" fill={nodeColor(state)} stroke={state === "picked" ? "#d97706" : "#fff"} strokeWidth={state === "picked" ? 3 : 2} />
-                  <text x={x} y={y - 4} textAnchor="middle" dominantBaseline="central" fontSize="14" fontWeight="700" fill="#fff" style={{ userSelect: "none", pointerEvents: "none" }}>{id}</text>
-                  {distLabel !== "" && (
-                    <text x={x} y={y + 11} textAnchor="middle" dominantBaseline="central" fontSize="9" fontWeight="600" fill="rgba(255,255,255,0.85)" style={{ userSelect: "none", pointerEvents: "none" }}>{distLabel}</text>
-                  )}
-                </g>
-              );
-            })}
-          </svg>
+          <div className="graph-touch-container" {...touchHandlers}>
+            <div className="graph-touch-inner" style={{ transform: `scale(${scale}) translate(${position.x / scale}px, ${position.y / scale}px)` }}>
+              <svg viewBox={`0 0 ${W} ${H}`} style={{ width: "100%", height: "100%", maxHeight: "100%" }}>
+                {graph.edges.map(([u, v, w]) => {
+                  const nu = graph.nodes[u], nv = graph.nodes[v];
+                  if (!nu || !nv) return null;
+                  const key = edgeKey(u, v);
+                  const isActive = activeEdge === key;
+                  const isPath = pathEdges.has(key);
+                  const stroke = isPath ? "#f59e0b" : isActive ? "#3b82f6" : "#cbd5e1";
+                  const strokeW = isActive || isPath ? 3 : 2;
+                  const mx = (nu.x + nv.x) / 2, my = (nu.y + nv.y) / 2;
+                  return (
+                    <g key={key}>
+                      <line x1={nu.x} y1={nu.y} x2={nv.x} y2={nv.y} className="graph-edge" stroke={stroke} strokeWidth={strokeW} strokeLinecap="round" />
+                      {w !== undefined && (
+                        <>
+                          <circle cx={mx} cy={my} r={11} fill="#ffffff" stroke={stroke} strokeWidth="1.5" style={{ transition: "stroke 0.25s ease" }} />
+                          <text x={mx} y={my} textAnchor="middle" dominantBaseline="central" fontSize="10" fontWeight="700" fill="#0B1F4A" style={{ userSelect: "none", pointerEvents: "none" }}>{w}</text>
+                        </>
+                      )}
+                    </g>
+                  );
+                })}
+                {nodeIds.map(id => {
+                  const { x, y } = graph.nodes[id];
+                  const state = nodeStates[id] || "unvisited";
+                  const d = distances[id];
+                  const distLabel = d === undefined ? "" : d === Infinity ? "∞" : String(d);
+                  return (
+                    <g key={id}>
+                      <circle cx={x} cy={y} r={NODE_RADIUS} className="graph-node" fill={nodeColor(state)} stroke={state === "picked" ? "#d97706" : "#fff"} strokeWidth={state === "picked" ? 3 : 2} />
+                      <text x={x} y={y - 4} textAnchor="middle" dominantBaseline="central" fontSize="14" fontWeight="700" fill="#fff" style={{ userSelect: "none", pointerEvents: "none" }}>{id}</text>
+                      {distLabel !== "" && (
+                        <text x={x} y={y + 11} textAnchor="middle" dominantBaseline="central" fontSize="9" fontWeight="600" fill="rgba(255,255,255,0.85)" style={{ userSelect: "none", pointerEvents: "none" }}>{distLabel}</text>
+                      )}
+                    </g>
+                  );
+                })}
+              </svg>
+            </div>
+          </div>
         </div>
       </div>
 
       {/* Right info column */}
-      <div className="side-panel" style={{ width: "200px", flexShrink: 0, display: "flex", flexDirection: "column", gap: "10px", overflowY: "auto", maxHeight: "100%" }}>
+      <div className="side-panel bottom-content" style={{ width: "200px", flexShrink: 0, display: "flex", flexDirection: "column", gap: "10px", overflowY: "auto", maxHeight: "100%" }}>
 
         <div style={CARD}>
           <p style={LABEL}>Step</p>

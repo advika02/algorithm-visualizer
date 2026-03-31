@@ -19,14 +19,10 @@ a {
   color: #646cff;
   text-decoration: inherit;
 }
-a:hover {
-  color: #535bf2;
-}
+a:hover { color: #535bf2; }
 
-/* ── Global reset for full-height no-scroll layout ── */
-*, *::before, *::after {
-  box-sizing: border-box;
-}
+/* ── Global reset ── */
+*, *::before, *::after { box-sizing: border-box; }
 
 html, body {
   height: 100%;
@@ -58,27 +54,13 @@ button:hover {
   transform: scale(1.04);
   box-shadow: 0 4px 12px rgba(0,0,0,0.15);
 }
-button:active {
-  transform: scale(0.97);
-  box-shadow: none;
-}
-button:disabled {
-  transform: none !important;
-  box-shadow: none !important;
-  cursor: not-allowed;
-}
+button:active { transform: scale(0.97); box-shadow: none; }
+button:disabled { transform: none !important; box-shadow: none !important; cursor: not-allowed; }
 
 @media (prefers-color-scheme: light) {
-  :root {
-    color: #213547;
-    background-color: #ffffff;
-  }
-  a:hover {
-    color: #747bff;
-  }
-  button {
-    background-color: #f9f9f9;
-  }
+  :root { color: #213547; background-color: #ffffff; }
+  a:hover { color: #747bff; }
+  button { background-color: #f9f9f9; }
 }
 
 /* ── Home page: allow scrolling ── */
@@ -86,6 +68,8 @@ button:disabled {
   overflow-y: auto;
   height: 100%;
 }
+
+/* ── Array bars ── */
 .array-bar {
   transition: height 0.28s cubic-bezier(0.4, 0, 0.2, 1),
               background-color 0.25s ease,
@@ -105,21 +89,9 @@ button:disabled {
 .side-panel::-webkit-scrollbar-track { background: transparent; }
 .side-panel::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
 
-/* ── Card hover lift ── */
-.viz-card {
-  transition: box-shadow 0.2s ease;
-}
-.viz-card:hover {
-  box-shadow: 0 8px 24px rgba(0,0,0,0.1) !important;
-}
-
 /* ── Graph SVG transitions ── */
-.graph-node {
-  transition: fill 0.3s ease, stroke 0.3s ease, filter 0.3s ease;
-}
-.graph-edge {
-  transition: stroke 0.3s ease, stroke-width 0.3s ease, opacity 0.3s ease;
-}
+.graph-node { transition: fill 0.3s ease, stroke 0.3s ease; }
+.graph-edge { transition: stroke 0.3s ease, stroke-width 0.3s ease; }
 
 /* ── Step panel pulse ── */
 @keyframes stepPulse {
@@ -127,11 +99,17 @@ button:disabled {
   70%  { box-shadow: 0 0 0 6px rgba(99,102,241,0); }
   100% { box-shadow: 0 0 0 0 rgba(99,102,241,0); }
 }
-.step-panel-active {
-  animation: stepPulse 0.6s ease-out;
+.step-panel-active { animation: stepPulse 0.6s ease-out; }
+
+/* ── Page wrapper: full-height on desktop ── */
+.page-wrapper {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
-/* ── Responsive utilities ── */
+/* ── Desktop nav ── */
 .resp-nav {
   display: flex;
   align-items: center;
@@ -140,22 +118,10 @@ button:disabled {
   padding: 8px 16px;
   gap: 8px;
 }
+.resp-nav-left { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.resp-nav-right { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
 
-.resp-nav-left {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  min-width: 0;
-}
-
-.resp-nav-right {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-shrink: 0;
-}
-
-/* Graph page body: side-by-side by default */
+/* ── Graph page body: side-by-side on desktop ── */
 .resp-body {
   flex: 1;
   min-height: 0;
@@ -164,384 +130,133 @@ button:disabled {
   display: flex;
   gap: 14px;
 }
+.resp-left-panel { width: 220px; flex-shrink: 0; overflow-y: auto; }
+.resp-viz-col { flex: 1; min-height: 0; min-width: 0; display: flex; flex-direction: column; }
 
-.resp-left-panel {
-  width: 220px;
-  flex-shrink: 0;
-  overflow-y: auto;
-}
-
-.resp-viz-col {
-  flex: 1;
-  min-height: 0;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-}
-
-/* Home page grid */
+/* ── Home page grid ── */
 .resp-section-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: 20px;
 }
 
-/* ── Tablet (641px – 1024px) ── */
-@media (max-width: 1024px) {
-  .resp-nav { padding: 7px 12px; }
-  .resp-body { padding: 10px 12px; gap: 10px; }
-  .resp-left-panel { width: 190px; }
-  .resp-section-grid { gap: 16px; }
-
-  /* Restore scrolling on tablet/mobile — desktop keeps overflow: hidden */
-  html, body, #root {
-    overflow: visible;
-    height: auto;
-  }
-  .resp-body {
-    overflow-y: auto;
-    overflow-x: hidden;
-  }
+/* ── Touch container (graph zoom/drag) ── */
+.graph-touch-container {
+  width: 100%;
+  height: 100%;
+  touch-action: none;
+  cursor: grab;
+}
+.graph-touch-container:active { cursor: grabbing; }
+.graph-touch-inner {
+  width: 100%;
+  height: 100%;
+  transition: transform 0.08s ease-out;
+  transform-origin: center center;
 }
 
-/* ── Mobile (≤ 640px) ── */
-@media (max-width: 640px) {
+/* ════════════════════════════════════════
+   MOBILE — max-width: 768px ONLY
+   All rules here are mobile-only.
+   Desktop (>768px) is completely unaffected.
+   ════════════════════════════════════════ */
+@media (max-width: 768px) {
+
+  /* Allow scrolling */
   html, body, #root {
-    overflow: visible;
-    height: auto;
+    height: auto !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+  }
+  .page-wrapper {
+    height: auto !important;
+    min-height: 100svh;
+    overflow: visible !important;
   }
 
-  .resp-nav {
-    flex-wrap: wrap;
-    padding: 6px 10px;
-    gap: 6px;
-  }
+  /* Nav: allow wrap */
+  .resp-nav { flex-wrap: wrap; padding: 6px 10px; }
   .resp-nav-left { gap: 6px; }
   .resp-nav-right { gap: 4px; }
 
-  /* Stack graph page layout vertically */
-  .resp-body {
-    flex-direction: column;
-    padding: 8px 10px;
-    gap: 8px;
-    overflow-y: auto;
-    overflow-x: hidden;
-  }
-  .resp-left-panel {
-    width: 100%;
-    flex-shrink: 1;
-    overflow-y: visible;
-  }
-  .resp-viz-col {
-    min-height: 300px;
-    overflow: visible;
-  }
-
-  /* Controls: prevent overlap */
-  .resp-controls {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-  }
-
-  /* Bars/SVG: full width, no fixed height */
-  svg {
-    width: 100% !important;
-    height: auto !important;
-  }
-
-  /* Home page */
-  .resp-section-grid {
-    grid-template-columns: 1fr;
-    gap: 12px;
-  }
-
-  /* Slightly smaller button text on mobile */
-  button { font-size: 0.85em; }
-}
-
-/* ── Page wrapper: full-height on desktop, auto on mobile ── */
-.page-wrapper {
-  height: 100vh;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
-
-@media (max-width: 1024px) {
-  .page-wrapper {
-    height: auto;
-    min-height: 100vh;
-    overflow-x: hidden;
-    overflow-y: auto;
-  }
-  /* Controls bar: allow wrapping on tablet/mobile */
-  .resp-controls-bar {
-    flex-wrap: wrap !important;
-    gap: 8px !important;
-  }
-}
-
-/* ── Mobile-only layout improvements ── */
-
-/* Sliders: stack vertically, full width, label above */
-@media (max-width: 640px) {
-  .resp-sliders {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    width: 100%;
-  }
-  .resp-slider-row {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    width: 100%;
-  }
-  .resp-slider-row label {
-    font-size: 10px;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    color: #9ca3af;
-  }
-  .resp-slider-row input[type="range"] {
-    width: 100%;
-  }
-
-  /* Controls bar: wrap buttons, full width */
-  .resp-controls-wrap {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    width: 100%;
-  }
-  .resp-controls-wrap button {
-    flex: 1;
-    min-width: 70px;
-  }
-
-  /* Visualizer bars: ensure visible */
-  .resp-bars-container {
-    width: 100%;
-    height: auto !important;
-    min-height: 200px;
-    overflow: visible !important;
-  }
-
-  /* Compare mode: stack panels */
-  .resp-compare-panels {
-    flex-direction: column !important;
-    overflow-y: auto !important;
-    overflow-x: hidden !important;
-  }
-  .resp-compare-panels > * {
-    width: 100% !important;
-    min-height: 400px;
-  }
-
-  /* Graph SVG: full width, auto height */
-  .resp-graph-svg {
-    width: 100% !important;
-    height: auto !important;
-    min-height: 260px;
-    overflow: visible !important;
-  }
-}
-
-/* ════════════════════════════════════════
-   MOBILE FIXES — max-width: 768px ONLY
-   Desktop layout is NOT affected
-   ════════════════════════════════════════ */
-@media (max-width: 768px) {
-
-  /* 1. Enable scroll, disable fixed height */
-  html, body, #root {
-    height: auto !important;
-    overflow-y: auto !important;
-    overflow-x: hidden !important;
-  }
-  .page-wrapper {
-    height: auto !important;
-    min-height: 100vh;
-    overflow: visible !important;
-  }
-
-  /* 2. Controls container: stack vertically */
-  .controls-container {
-    display: flex !important;
-    flex-direction: column !important;
-    gap: 16px !important;
-  }
-
-  /* 3. Slider groups: label above, full-width slider */
-  .slider-group {
-    display: flex !important;
-    flex-direction: column !important;
-    width: 100% !important;
-    gap: 0 !important;
-  }
-  .slider-group label {
-    margin-bottom: 6px !important;
-    font-size: 14px !important;
-  }
-  .slider-group input[type="range"] {
-    width: 100% !important;
-  }
-
-  /* 4. Visualizer container: visible, min-height */
-  .resp-bars-container,
-  .resp-graph-svg {
-    width: 100% !important;
-    min-height: 250px !important;
-    overflow: visible !important;
-    height: auto !important;
-  }
-
-  /* 5. Compare mode: stack panels */
-  .resp-compare-panels {
-    flex-direction: column !important;
-    overflow-y: auto !important;
-    overflow-x: hidden !important;
-    height: auto !important;
-  }
-  .resp-compare-panels > * {
-    width: 100% !important;
-    min-height: 400px;
-  }
-  .resp-compare-panels input,
-  .resp-compare-panels button {
-    width: 100% !important;
-    box-sizing: border-box !important;
-  }
-
-  /* 6. Graph page body: stack vertically, scrollable */
+  /* Graph page body: stack vertically */
   .resp-body {
     flex-direction: column !important;
+    height: auto !important;
     overflow-y: auto !important;
     overflow-x: hidden !important;
-    height: auto !important;
     padding: 8px 10px !important;
     gap: 10px !important;
   }
-  .resp-left-panel {
+  .resp-left-panel { width: 100% !important; overflow-y: visible !important; }
+  .resp-viz-col { width: 100% !important; min-height: 320px !important; overflow: visible !important; }
+
+  /* Graph SVG: visible, min-height */
+  .resp-graph-svg {
     width: 100% !important;
-    overflow-y: visible !important;
-  }
-  .resp-viz-col {
     min-height: 300px !important;
     overflow: visible !important;
-  }
-
-  /* 7. Normal mode three-column → single column */
-  .resp-normal-layout {
-    flex-direction: column !important;
-    overflow-y: auto !important;
     height: auto !important;
   }
-  .resp-normal-layout > * {
-    width: 100% !important;
+
+  /* Graph card (top-visualizer-section): natural height, no 100vh */
+  .top-visualizer-section {
+    height: auto !important;
+    min-height: 360px !important;
+    overflow: visible !important;
+    border-radius: 12px !important;
   }
 
-  /* 8. Buttons: wrap cleanly */
-  .resp-btn-group {
+  /* Right info column (bottom-content): full width, stacked */
+  .bottom-content {
+    width: 100% !important;
+    max-height: none !important;
+    overflow-y: visible !important;
+    flex-direction: column !important;
+  }
+
+  /* Normal mode layout: single column */
+  .resp-normal-layout {
+    flex-direction: column !important;
+    height: auto !important;
+    overflow: visible !important;
+  }
+  .resp-normal-layout > * { width: 100% !important; }
+
+  /* Bars container */
+  .resp-bars-container {
+    width: 100% !important;
+    min-height: 220px !important;
+    overflow: visible !important;
+    height: auto !important;
+  }
+
+  /* Compare panels: stack */
+  .resp-compare-panels {
+    flex-direction: column !important;
+    height: auto !important;
+    overflow: visible !important;
+  }
+  .resp-compare-panels > * { width: 100% !important; min-height: 380px; }
+
+  /* Buttons: wrap */
+  .resp-btn-group, .controls-buttons {
     display: flex !important;
     flex-wrap: wrap !important;
     gap: 8px !important;
-  }
-  .resp-btn-group button {
-    flex: 1 !important;
-    min-width: 70px !important;
+    width: 100% !important;
   }
 
-  /* 9. Nav: allow wrap on very small screens */
-  .resp-nav {
-    flex-wrap: wrap !important;
-    padding: 6px 10px !important;
-  }
-}
-
-/* ════════════════════════════════════════
-   MOBILE REORDER — max-width: 768px ONLY
-   Uses CSS order to reorder sections.
-   Desktop layout is NOT affected.
-   ════════════════════════════════════════ */
-@media (max-width: 768px) {
-
-  /* Make the controls bar and three-column layout
-     part of a single flex column so order works */
-  .resp-normal-layout {
-    display: flex !important;
+  /* Sliders: full width */
+  .slider-group {
     flex-direction: column !important;
-    gap: 10px !important;
-    overflow-y: auto !important;
-    height: auto !important;
-  }
-
-  /* Controls bar: split buttons and sliders visually via order */
-  .controls-bar {
-    display: flex !important;
-    flex-direction: column !important;
-    gap: 10px !important;
-  }
-
-  /* Buttons: order 1 — top */
-  .controls-buttons {
-    order: 1 !important;
     width: 100% !important;
   }
+  .slider-group input[type="range"] { width: 100% !important; }
 
-  /* Sliders: order 3 — below visualizer */
-  .sliders {
-    order: 3 !important;
-    width: 100% !important;
-  }
+  /* Home page grid: single column */
+  .resp-section-grid { grid-template-columns: 1fr; gap: 12px; }
 
-  /* Center panel (legend + bars): order 2 */
-  .center-panel {
-    order: 2 !important;
-    width: 100% !important;
-    min-height: 280px !important;
-  }
-
-  /* Visualizer bars: visible, no fixed height */
-  .visualizer-container {
-    width: 100% !important;
-    min-height: 250px !important;
-    overflow: visible !important;
-    height: auto !important;
-  }
-
-  /* Legend: inside center-panel, stays above bars naturally */
-  .legend {
-    order: 0 !important;
-  }
-
-  /* Right panel (stats): order 4 */
-  .right-panel {
-    order: 4 !important;
-    width: 100% !important;
-    max-height: none !important;
-  }
-
-  /* Stats cards */
-  .stats {
-    order: 4 !important;
-  }
-
-  /* Left panel (custom array + complexity): order 5+ */
-  .left-panel {
-    order: 5 !important;
-    width: 100% !important;
-    max-height: none !important;
-  }
-
-  /* Custom array: order 5 */
-  .custom-array {
-    order: 5 !important;
-  }
-
-  /* Complexity: order 6 */
-  .complexity {
-    order: 6 !important;
-  }
+  /* Slightly smaller buttons */
+  button { font-size: 0.88em; }
 }

@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { bfsAnimations } from "../algorithms/bfs";
+import { useGraphTouch } from "../hooks/useGraphTouch";
 
 const NODE_RADIUS = 24;
 
@@ -24,6 +25,7 @@ const LABEL = { margin: "0 0 6px", fontSize: "10px", textTransform: "uppercase",
 
 export function BFSVisualizer({ speedRef, graph, startNode: startNodeProp, onGenerate }) {
   const nodeIds = Object.keys(graph.nodes);
+  const { scale, position, touchHandlers } = useGraphTouch();
 
   const [startNode, setStartNode] = useState(startNodeProp ?? nodeIds[0] ?? "A");
   const [nodeStates, setNodeStates] = useState({});
@@ -182,25 +184,29 @@ export function BFSVisualizer({ speedRef, graph, startNode: startNodeProp, onGen
         </div>
 
         <div className="resp-graph-svg" style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden" }}>
-          <svg viewBox={`0 0 ${W} ${H}`} style={{ width: "100%", height: "100%", maxHeight: "100%" }}>
-            {graph.edges.map(([u, v]) => {
-              const nu = graph.nodes[u], nv = graph.nodes[v];
-              if (!nu || !nv) return null;
-              const key = edgeKey(u, v);
-              const active = activeEdges.has(key);
-              return <line key={key} x1={nu.x} y1={nu.y} x2={nv.x} y2={nv.y} className="graph-edge" stroke={active ? "#3b82f6" : "#cbd5e1"} strokeWidth={active ? 3 : 2} strokeLinecap="round" />;
-            })}
-            {nodeIds.map(id => {
-              const { x, y } = graph.nodes[id];
-              const state = nodeStates[id] || "unvisited";
-              return (
-                <g key={id}>
-                  <circle cx={x} cy={y} r={NODE_RADIUS} className="graph-node" fill={nodeColor(state)} stroke={state === "visiting" ? "#ea580c" : "#fff"} strokeWidth={state === "visiting" ? 3 : 2} />
-                  <text x={x} y={y} textAnchor="middle" dominantBaseline="central" fontSize="15" fontWeight="700" fill="#fff" style={{ userSelect: "none", pointerEvents: "none" }}>{id}</text>
-                </g>
-              );
-            })}
-          </svg>
+          <div className="graph-touch-container" {...touchHandlers}>
+            <div className="graph-touch-inner" style={{ transform: `scale(${scale}) translate(${position.x / scale}px, ${position.y / scale}px)` }}>
+              <svg viewBox={`0 0 ${W} ${H}`} style={{ width: "100%", height: "100%", maxHeight: "100%" }}>
+                {graph.edges.map(([u, v]) => {
+                  const nu = graph.nodes[u], nv = graph.nodes[v];
+                  if (!nu || !nv) return null;
+                  const key = edgeKey(u, v);
+                  const active = activeEdges.has(key);
+                  return <line key={key} x1={nu.x} y1={nu.y} x2={nv.x} y2={nv.y} className="graph-edge" stroke={active ? "#3b82f6" : "#cbd5e1"} strokeWidth={active ? 3 : 2} strokeLinecap="round" />;
+                })}
+                {nodeIds.map(id => {
+                  const { x, y } = graph.nodes[id];
+                  const state = nodeStates[id] || "unvisited";
+                  return (
+                    <g key={id}>
+                      <circle cx={x} cy={y} r={NODE_RADIUS} className="graph-node" fill={nodeColor(state)} stroke={state === "visiting" ? "#ea580c" : "#fff"} strokeWidth={state === "visiting" ? 3 : 2} />
+                      <text x={x} y={y} textAnchor="middle" dominantBaseline="central" fontSize="15" fontWeight="700" fill="#fff" style={{ userSelect: "none", pointerEvents: "none" }}>{id}</text>
+                    </g>
+                  );
+                })}
+              </svg>
+            </div>
+          </div>
         </div>
       </div>
 
