@@ -179,6 +179,53 @@ button:disabled { transform: none !important; box-shadow: none !important; curso
   .resp-nav-left { gap: 6px; }
   .resp-nav-right { gap: 4px; }
 
+  /* ── GRAPH VISUALIZER: force single column ── */
+
+  /* Root flex row → column */
+  .graph-viz-root {
+    flex-direction: column !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    height: auto !important;
+    gap: 10px !important;
+  }
+
+  /* Graph card: full width, tall enough to see */
+  .top-visualizer-section {
+    width: 100% !important;
+    height: auto !important;
+    min-height: 360px !important;
+    overflow: visible !important;
+    border-radius: 12px !important;
+    flex-shrink: 0 !important;
+  }
+
+  /* SVG area inside graph card: tall */
+  .resp-graph-svg {
+    width: 100% !important;
+    min-height: 300px !important;
+    height: 300px !important;
+    overflow: hidden !important;
+  }
+
+  /* Right info column: full width, natural height */
+  .bottom-content {
+    width: 100% !important;
+    max-height: none !important;
+    overflow-y: visible !important;
+    flex-direction: column !important;
+    flex-shrink: 0 !important;
+  }
+
+  /* ── Info panel ordering inside bottom-content ── */
+  .gi-step      { order: 1 !important; width: 100% !important; }
+  .gi-queue     { order: 2 !important; width: 100% !important; }
+  .gi-traversal { order: 3 !important; width: 100% !important; }
+  .gi-legend    { order: 5 !important; width: 100% !important; }
+
+  /* Graph input panel (in page left column): order 4 */
+  .gi-graph-input { order: 4 !important; width: 100% !important; }
+
   /* Graph page body: stack vertically */
   .resp-body {
     flex-direction: column !important;
@@ -189,30 +236,12 @@ button:disabled { transform: none !important; box-shadow: none !important; curso
     gap: 10px !important;
   }
   .resp-left-panel { width: 100% !important; overflow-y: visible !important; }
-  .resp-viz-col { width: 100% !important; min-height: 320px !important; overflow: visible !important; }
+  .resp-viz-col { width: 100% !important; min-height: 0 !important; overflow: visible !important; }
 
-  /* Graph SVG: visible, min-height */
-  .resp-graph-svg {
-    width: 100% !important;
-    min-height: 300px !important;
-    overflow: visible !important;
+  /* DFS: graph-mobile-layout root */
+  .graph-mobile-layout {
     height: auto !important;
-  }
-
-  /* Graph card (top-visualizer-section): natural height, no 100vh */
-  .top-visualizer-section {
-    height: auto !important;
-    min-height: 360px !important;
     overflow: visible !important;
-    border-radius: 12px !important;
-  }
-
-  /* Right info column (bottom-content): full width, stacked */
-  .bottom-content {
-    width: 100% !important;
-    max-height: none !important;
-    overflow-y: visible !important;
-    flex-direction: column !important;
   }
 
   /* Normal mode layout: single column */

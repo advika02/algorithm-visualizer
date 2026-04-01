@@ -185,7 +185,7 @@ export function DFSVisualizer({ speedRef, graph, startNode: startNodeProp, onGen
       </div>
 
       {/* Main area */}
-      <div className="top-visualizer-section" style={{ flex: 1, display: "flex", gap: "12px", minHeight: 0, overflow: "hidden" }}>
+      <div className="graph-viz-root" style={{ flex: 1, display: "flex", gap: "12px", minHeight: 0, overflow: "hidden" }}>
 
         {/* Graph SVG */}
         <div className="resp-graph-svg" style={{ flex: 1, backgroundColor: "#ffffff", borderRadius: "12px", boxShadow: "0 8px 30px rgba(0,0,0,0.3)", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden", minHeight: 0 }}>
@@ -215,14 +215,14 @@ export function DFSVisualizer({ speedRef, graph, startNode: startNodeProp, onGen
         </div>
 
         {/* Right info column */}
-        <div className="side-panel" style={{ width: "200px", flexShrink: 0, display: "flex", flexDirection: "column", gap: "10px", overflowY: "auto", maxHeight: "100%" }}>
+        <div className="side-panel bottom-content" style={{ width: "200px", flexShrink: 0, display: "flex", flexDirection: "column", gap: "10px", overflowY: "auto", maxHeight: "100%" }}>
 
-          <div style={CARD}>
+          <div className="gi-step" style={CARD}>
             <p style={LABEL}>Step Explanation</p>
             <p style={{ margin: 0, fontSize: "12px", fontWeight: "600", color: "#0B1F4A", lineHeight: "1.65", minHeight: "36px" }}>{explanation}</p>
           </div>
 
-          <div style={CARD}>
+          <div className="gi-queue" style={CARD}>
             <p style={LABEL}>Call Stack</p>
             <div style={{ display: "flex", flexDirection: "column-reverse", gap: "4px", minHeight: "28px" }}>
               {stackDisplay.length === 0
@@ -234,7 +234,7 @@ export function DFSVisualizer({ speedRef, graph, startNode: startNodeProp, onGen
             </div>
           </div>
 
-          <div style={{ ...CARD, maxHeight: "160px", overflowY: "auto" }}>
+          <div className="gi-traversal" style={{ ...CARD, maxHeight: "160px", overflowY: "auto" }}>
             <p style={LABEL}>Traversal Order</p>
             {traversalOrder.length === 0
               ? <span style={{ fontSize: "12px", color: "#9ca3af" }}>—</span>
@@ -249,7 +249,7 @@ export function DFSVisualizer({ speedRef, graph, startNode: startNodeProp, onGen
             }
           </div>
 
-          <div style={{ ...CARD, fontSize: "12px", color: "#0B1F4A" }}>
+          <div className="gi-legend" style={{ ...CARD, fontSize: "12px", color: "#0B1F4A" }}>
             <p style={LABEL}>Legend</p>
             {[
               { color: "#64748b", label: "Unvisited"  },

@@ -56,7 +56,7 @@ export default function DFSPage() {
 
       {/* Body */}
       <div className="resp-body">
-        <div className="resp-left-panel">
+        <div className="resp-left-panel gi-graph-input">
           <GraphInputPanel onLoad={handleLoadGraph} accentColor="#3b82f6" />
 
           {/* Complexity */}
