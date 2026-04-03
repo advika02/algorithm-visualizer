@@ -51,7 +51,10 @@ export default function DijkstraPage() {
         </div>
 
         <div className="resp-nav-right">
-          <input type="range" min="1" max="100" step="1" value={speed} onChange={handleSpeedChange} style={{ accentColor: "#3b82f6", width: "100px" }} />
+          <div className="slider-group speed-control" style={{ display: "flex", flexDirection: "column", alignItems: "flex-end" }}>
+            <label style={{ fontSize: "11px", textTransform: "uppercase", letterSpacing: "1px", color: "#9ca3af", marginBottom: "3px" }}>Speed</label>
+            <input type="range" min="1" max="100" step="1" value={speed} onChange={handleSpeedChange} style={{ accentColor: "#3b82f6", width: "100px" }} />
+          </div>
         </div>
       </div>
 
